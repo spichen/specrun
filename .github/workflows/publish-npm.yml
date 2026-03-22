@@ -13,6 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Clone agentspec SDK (file: dependency expects it at ../agent-spec/tsagentspec)
+      # TODO: Replace with npm registry dependency once agentspec is published
+      - name: Clone agentspec SDK
+        run: |
+          git clone --depth 1 --branch typescript-sdk https://github.com/spichen/agent-spec.git ../agent-spec
+          cd ../agent-spec/tsagentspec && npm ci && npm run build
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20

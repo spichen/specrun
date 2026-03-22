@@ -34,7 +34,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup",
     "prepublishOnly": "npm run build",
     "dev": "tsx src/index.ts",
     "test": "vitest run",
