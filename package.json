@@ -1,6 +1,6 @@
 {
   "name": "specrun",
-  "version": "0.1.0",
+  "version": "0.1.0-beta1",
   "description": "Lightweight CLI agentic workflow framework",
   "type": "module",
   "license": "MIT",
