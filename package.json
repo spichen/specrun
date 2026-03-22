@@ -3,12 +3,39 @@
   "version": "0.1.0",
   "description": "Lightweight CLI agentic workflow framework",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spichen/specrun.git"
+  },
+  "homepage": "https://github.com/spichen/specrun",
+  "bugs": {
+    "url": "https://github.com/spichen/specrun/issues"
+  },
+  "keywords": [
+    "cli",
+    "agent",
+    "workflow",
+    "llm",
+    "ai",
+    "openai",
+    "agentic"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "main": "dist/index.js",
   "bin": {
     "specrun": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
+    "prepublishOnly": "npm run build",
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
