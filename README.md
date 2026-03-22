@@ -1,12 +1,12 @@
 # specrun
 
-A lightweight CLI framework for building and executing agentic workflows using the [Oracle Agent Spec](https://docs.oracle.com/en/cloud/paas/digital-assistant/agent-spec/) (v26.1.0).
+A lightweight CLI framework for building and executing agentic workflows using the [Open Agent Specification](https://oracle.github.io/agent-spec/).
 
 Define multi-step AI workflows as JSON, wire up LLM-powered agents and external tools, and run them from the command line.
 
 ## Features
 
-- **Agent Spec compliant** - Implements the Oracle Agent Spec v26.1.0 format for portable workflow definitions
+- **Agent Spec compliant** - Implements the [Open Agent Specification](https://oracle.github.io/agent-spec/) format for portable workflow definitions
 - **Graph-based execution** - Flows are compiled into directed graphs with control flow and data flow edges
 - **LLM integration** - OpenAI-compatible LLM provider with tool-calling loop support
 - **External tools** - Tools are standalone executables (shell scripts, Python, etc.) that communicate via JSON over stdin/stdout
@@ -63,11 +63,11 @@ Options:
   -v, --verbose   Enable verbose logging
 
 Commands:
-  run <flow.json>          Run an Agent Spec flow
+  run <flow>               Run an Agent Spec flow (JSON or YAML)
     --tools-dir <dir>      Directory containing tool executables
     --input <json>         Input JSON object
 
-  validate <flow.json>     Validate a flow definition
+  validate <flow>          Validate a flow definition (JSON or YAML)
     --tools-dir <dir>      Directory containing tool executables
 
   init <project-name>      Scaffold a new specrun project
@@ -77,29 +77,7 @@ Commands:
 
 ### Flow Definition
 
-Flows are JSON files following the Agent Spec format. A flow consists of **nodes** connected by **control flow** (execution order) and **data flow** (data passing) edges.
-
-```json
-{
-  "component_type": "Flow",
-  "agentspec_version": "26.1.0",
-  "name": "my-flow",
-  "start_node": {
-    "component_type": "StartNode",
-    "name": "start",
-    "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
-  },
-  "nodes": [ ... ],
-  "control_flow_connections": [
-    {"from_node": "start", "to_node": "agent"},
-    {"from_node": "agent", "to_node": "end"}
-  ],
-  "data_flow_connections": [
-    {"source_node": "start", "source_output": "query", "destination_node": "agent", "destination_input": "query"},
-    {"source_node": "agent", "source_output": "result", "destination_node": "end", "destination_input": "result"}
-  ]
-}
-```
+Flows are JSON or YAML files following the [Open Agent Specification](https://oracle.github.io/agent-spec/) format. A flow consists of **nodes** connected by **control flow** (execution order) and **data flow** (data passing) edges. Nodes and edges use `$component_ref` references — see `testdata/` for examples.
 
 ### Node Types
 
@@ -132,8 +110,8 @@ Tools are referenced by name in flow definitions and resolved from the `--tools-
 JSON file → Parse → Validate spec → Compile graph → Validate graph → Run
 ```
 
-1. **Parse** - Reads the Agent Spec JSON and resolves all node types
-2. **Validate spec** - Checks structural correctness (required fields, valid references)
+1. **Parse** - Reads the Agent Spec JSON/YAML via the [agentspec SDK](https://oracle.github.io/agent-spec/) and resolves all node types
+2. **Validate spec** - Zod schema validation via the SDK plus graph-level checks
 3. **Compile** - Builds an executable graph with control and data flow edges
 4. **Validate graph** - Ensures the graph is well-formed (reachable nodes, valid connections)
 5. **Run** - Executes the graph from `StartNode` to `EndNode`, passing state between nodes
@@ -165,11 +143,16 @@ examples/
 testdata/               Test flow definitions and tool scripts
 ```
 
-## Environment Variables
+## LLM Configuration
 
-| Variable | Description |
-|----------|-------------|
-| `OPENAI_API_KEY` | Required. API key for the OpenAI provider. |
+LLM providers are configured in the flow's `llm_config` field. Supported types:
+
+| Config Type | Description |
+|-------------|-------------|
+| `OpenAiConfig` | OpenAI API (uses `OPENAI_API_KEY` env var or `api_key` in spec) |
+| `OpenAiCompatibleConfig` | Any OpenAI-compatible endpoint with a custom `url` |
+| `VllmConfig` | vLLM self-hosted endpoint |
+| `OllamaConfig` | Ollama local endpoint |
 
 ## Development
 
