@@ -6,7 +6,6 @@ import { compile } from '../graph/compile.js';
 import { validate } from '../graph/validate.js';
 import { FileRegistry } from '../tool/registry.js';
 import { SubprocessExecutor } from '../tool/executor.js';
-import { OpenAIProvider } from '../llm/openai.js';
 import { Runner } from '../runner/runner.js';
 import { defaultOptions } from '../runner/options.js';
 import type { Event } from '../runner/events.js';
@@ -44,12 +43,8 @@ export const runCommand = new Command('run')
         reg.validateTools(toolNames);
       }
 
-      // Set up LLM provider
-      const provider = new OpenAIProvider();
-
       // Set up dependencies
       const deps = {
-        llmProvider: provider,
         toolExecutor: new SubprocessExecutor(),
         toolRegistry: reg,
         verbose,

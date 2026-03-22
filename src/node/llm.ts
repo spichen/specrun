@@ -2,6 +2,7 @@ import type { LLMNode } from '../spec/types.js';
 import { State } from '../state/state.js';
 import type { NodeExecutor, Dependencies } from './types.js';
 import { substituteTemplate } from './agent.js';
+import { createProvider } from '../llm/provider.js';
 
 /** LLMExecutor executes an LlmNode by running a prompt template through the LLM. */
 export class LLMExecutor implements NodeExecutor {
@@ -21,20 +22,19 @@ export class LLMExecutor implements NodeExecutor {
     signal: AbortSignal | undefined,
     input: State,
   ): Promise<State> {
-    if (!this.deps.llmProvider) {
+    if (!this.node.llmConfig) {
       throw new Error(
-        `run: LlmNode "${this.node.name}": no LLM provider configured`,
+        `run: LlmNode "${this.node.name}": node has no llmConfig`,
       );
     }
 
+    // Resolve LLM provider from the spec's llmConfig
+    const provider = createProvider(this.node.llmConfig);
+    const model = this.node.llmConfig.modelId;
+
     const prompt = substituteTemplate(this.node.promptTemplate, input);
 
-    let model = 'gpt-4o';
-    if (this.node.llmConfig?.modelId) {
-      model = this.node.llmConfig.modelId;
-    }
-
-    const resp = await this.deps.llmProvider.chatCompletion(signal, {
+    const resp = await provider.chatCompletion(signal, {
       model,
       messages: [{ role: 'user', content: prompt }],
     });

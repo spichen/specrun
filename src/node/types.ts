@@ -1,4 +1,3 @@
-import type { Provider } from '../llm/types.js';
 import type { State } from '../state/state.js';
 import type { Executor, Registry } from '../tool/types.js';
 
@@ -10,7 +9,6 @@ export interface NodeExecutor {
 
 /** Dependencies holds shared dependencies for node executors. */
 export interface Dependencies {
-  llmProvider?: Provider;
   toolExecutor?: Executor;
   toolRegistry?: Registry;
   verbose?: boolean;

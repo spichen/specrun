@@ -3,6 +3,7 @@ import { propertyTitle } from '../spec/types.js';
 import { State } from '../state/state.js';
 import type { Message, ToolCall, ToolDefinition } from '../llm/types.js';
 import type { NodeExecutor, Dependencies } from './types.js';
+import { createProvider } from '../llm/provider.js';
 
 const MAX_TOOL_ROUNDS = 10;
 
@@ -29,11 +30,15 @@ export class AgentExecutor implements NodeExecutor {
       throw new Error(`run: AgentNode "${this.node.name}" has no agent`);
     }
 
-    if (!this.deps.llmProvider) {
+    if (!agent.llmConfig) {
       throw new Error(
-        `run: AgentNode "${this.node.name}": no LLM provider configured`,
+        `run: AgentNode "${this.node.name}": agent has no llmConfig`,
       );
     }
+
+    // Resolve LLM provider from the spec's llmConfig
+    const provider = createProvider(agent.llmConfig);
+    const model = agent.llmConfig.modelId;
 
     // Build system prompt with template substitution
     const systemPrompt = substituteTemplate(
@@ -62,14 +67,9 @@ export class AgentExecutor implements NodeExecutor {
     const inputJSON = JSON.stringify(input.toData());
     messages.push({ role: 'user', content: inputJSON });
 
-    let model = 'gpt-4o';
-    if (agent.llmConfig?.modelId) {
-      model = agent.llmConfig.modelId;
-    }
-
     // Tool-calling loop
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const resp = await this.deps.llmProvider.chatCompletion(signal, {
+      const resp = await provider.chatCompletion(signal, {
         model,
         messages,
         tools: toolDefs.length > 0 ? toolDefs : undefined,

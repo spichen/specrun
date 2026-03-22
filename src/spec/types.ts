@@ -25,6 +25,7 @@ export interface LLMConfig {
   componentType?: string;
   modelId: string;
   url?: string;
+  apiKey?: string;
   defaultGenerationParameters?: Record<string, unknown>;
 }
 
