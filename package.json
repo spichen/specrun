@@ -1,5 +1,5 @@
 {
-  "name": "specrun",
+  "name": "@specrun/cli",
   "version": "0.1.0-beta1",
   "description": "Lightweight CLI agentic workflow framework",
   "type": "module",
