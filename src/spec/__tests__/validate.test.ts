@@ -37,19 +37,20 @@ describe('validateAgent', () => {
   it('validates a valid agent', () => {
     const agent: Agent = {
       name: 'test',
-      component_type: 'Agent',
-      system_prompt: 'hello',
-      llm_config: { model_id: 'gpt-4o' } as LLMConfig,
+      componentType: 'Agent',
+      systemPrompt: 'hello',
+      llmConfig: { modelId: 'gpt-4o' } as LLMConfig,
     };
     expect(() => validateAgent(agent)).not.toThrow();
   });
 
-  it('rejects agent missing system_prompt', () => {
+  it('rejects agent missing name', () => {
     const agent: Agent = {
-      name: 'test',
-      component_type: 'Agent',
-      llm_config: { model_id: 'gpt-4o' } as LLMConfig,
+      name: '',
+      componentType: 'Agent',
+      systemPrompt: 'hello',
+      llmConfig: { modelId: 'gpt-4o' } as LLMConfig,
     };
-    expect(() => validateAgent(agent)).toThrow(/system_prompt/);
+    expect(() => validateAgent(agent)).toThrow(/name/);
   });
 });

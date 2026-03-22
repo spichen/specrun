@@ -37,7 +37,7 @@ export class AgentExecutor implements NodeExecutor {
 
     // Build system prompt with template substitution
     const systemPrompt = substituteTemplate(
-      agent.system_prompt ?? '',
+      agent.systemPrompt ?? '',
       input,
     );
 
@@ -63,8 +63,8 @@ export class AgentExecutor implements NodeExecutor {
     messages.push({ role: 'user', content: inputJSON });
 
     let model = 'gpt-4o';
-    if (agent.llm_config?.model_id) {
-      model = agent.llm_config.model_id;
+    if (agent.llmConfig?.modelId) {
+      model = agent.llmConfig.modelId;
     }
 
     // Tool-calling loop
@@ -195,7 +195,7 @@ export function buildToolSchema(t: ToolSpec): Record<string, unknown> {
       const name = propertyTitle(input);
       if (!name) continue;
       const prop: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(input.json_schema)) {
+      for (const [k, v] of Object.entries(input.jsonSchema)) {
         if (k !== 'title') {
           prop[k] = v;
         }

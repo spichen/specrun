@@ -1,4 +1,4 @@
-# agentflow
+# specrun
 
 A lightweight CLI framework for building and executing agentic workflows using the [Oracle Agent Spec](https://docs.oracle.com/en/cloud/paas/digital-assistant/agent-spec/) (v26.1.0).
 
@@ -12,23 +12,24 @@ Define multi-step AI workflows as JSON, wire up LLM-powered agents and external 
 - **External tools** - Tools are standalone executables (shell scripts, Python, etc.) that communicate via JSON over stdin/stdout
 - **Branching logic** - Conditional routing with `BranchingNode` for dynamic workflows
 - **Validation** - Spec-level and graph-level validation catches errors before execution
-- **Scaffolding** - `agentflow init` generates a project template to get started quickly
+- **Scaffolding** - `specrun init` generates a project template to get started quickly
 
 ## Installation
 
 ```bash
-npm install
-npm run build
-```
+# npm
+npm install -g @specrun/cli
 
-This produces the `agentflow` CLI at `dist/index.js`.
+# Homebrew
+brew install spichen/tap/specrun
+```
 
 ## Quick Start
 
 ### 1. Scaffold a new project
 
 ```bash
-agentflow init my-project
+specrun init my-project
 ```
 
 This creates:
@@ -42,7 +43,7 @@ my-project/
 ### 2. Run a flow
 
 ```bash
-agentflow run my-project/flow.json \
+specrun run my-project/flow.json \
   --tools-dir my-project/tools \
   --input '{"query": "hello"}'
 ```
@@ -50,13 +51,13 @@ agentflow run my-project/flow.json \
 ### 3. Validate a flow
 
 ```bash
-agentflow validate my-project/flow.json --tools-dir my-project/tools
+specrun validate my-project/flow.json --tools-dir my-project/tools
 ```
 
 ## CLI Reference
 
 ```
-agentflow [options] <command>
+specrun [options] <command>
 
 Options:
   -v, --verbose   Enable verbose logging
@@ -69,7 +70,7 @@ Commands:
   validate <flow.json>     Validate a flow definition
     --tools-dir <dir>      Directory containing tool executables
 
-  init <project-name>      Scaffold a new agentflow project
+  init <project-name>      Scaffold a new specrun project
 ```
 
 ## How It Works
@@ -188,4 +189,4 @@ npm run build
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+MIT - See [LICENSE](LICENSE) for details.

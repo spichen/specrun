@@ -35,12 +35,12 @@ describe('validate graph', () => {
           {
             name: 'start',
             type: 'StartNode',
-            specNode: { component_type: 'StartNode', name: 'start' } as any,
+            specNode: { componentType: 'StartNode', name: 'start' } as any,
             executor: {
               execute: async (_: any, input: any) => input,
               branch: () => '',
             },
-            edges: [{ from_node: 'start', to_node: 'end' }],
+            edges: [{ fromNode: 'start', toNode: 'end' }],
             inputMappings: new Map(),
           },
         ],
@@ -49,7 +49,7 @@ describe('validate graph', () => {
           {
             name: 'end',
             type: 'EndNode',
-            specNode: { component_type: 'EndNode', name: 'end' } as any,
+            specNode: { componentType: 'EndNode', name: 'end' } as any,
             executor: {
               execute: async (_: any, input: any) => input,
               branch: () => '',
@@ -63,7 +63,7 @@ describe('validate graph', () => {
           {
             name: 'orphan',
             type: 'AgentNode',
-            specNode: { component_type: 'AgentNode', name: 'orphan' } as any,
+            specNode: { componentType: 'AgentNode', name: 'orphan' } as any,
             executor: {
               execute: async (_: any, input: any) => input,
               branch: () => '',

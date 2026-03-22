@@ -16,7 +16,7 @@ export function validate(g: CompiledGraph): void {
     const cn = g.nodes.get(name);
     if (!cn) return;
     for (const edge of cn.edges) {
-      walk(edge.to_node);
+      walk(edge.toNode);
     }
   };
   walk(g.start);

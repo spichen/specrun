@@ -42,6 +42,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "agentspec": "file:../agent-spec/tsagentspec",
     "commander": "^13.1.0",
     "openai": "^4.85.0"
   },

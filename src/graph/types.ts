@@ -46,20 +46,20 @@ export class CompiledGraph {
   /** NextNode resolves the next node from the current node. */
   nextNode(current: CompiledNode, branch: string): [CompiledNode, boolean] {
     for (const edge of current.edges) {
-      if (branch === '' && (edge.from_branch ?? '') === '') {
-        const next = this.nodes.get(edge.to_node);
+      if (branch === '' && (edge.fromBranch ?? '') === '') {
+        const next = this.nodes.get(edge.toNode);
         if (next) return [next, true];
       }
-      if (branch !== '' && edge.from_branch === branch) {
-        const next = this.nodes.get(edge.to_node);
+      if (branch !== '' && edge.fromBranch === branch) {
+        const next = this.nodes.get(edge.toNode);
         if (next) return [next, true];
       }
     }
     // Fallback: if no branch match, try first edge with no branch
     if (branch !== '') {
       for (const edge of current.edges) {
-        if ((edge.from_branch ?? '') === '') {
-          const next = this.nodes.get(edge.to_node);
+        if ((edge.fromBranch ?? '') === '') {
+          const next = this.nodes.get(edge.toNode);
           if (next) return [next, true];
         }
       }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import { parseFlow } from '../spec/parser.js';
+import { parseFlow, parseFlowYaml } from '../spec/parser.js';
 import { validateFlow } from '../spec/validate.js';
 import { compile } from '../graph/compile.js';
 import { validate } from '../graph/validate.js';
@@ -14,7 +14,7 @@ import { collectToolNames } from './validate.js';
 
 export const runCommand = new Command('run')
   .description('Run an Agent Spec flow')
-  .argument('<flow.json>', 'Path to flow JSON file')
+  .argument('<flow>', 'Path to flow JSON or YAML file')
   .option('--tools-dir <dir>', 'Directory containing tool executables')
   .option('--input <json>', 'Input JSON object')
   .action(
@@ -27,8 +27,10 @@ export const runCommand = new Command('run')
 
       const data = readFileSync(flowPath, 'utf-8');
 
-      // Parse
-      const pf = parseFlow(data);
+      // Parse (detect format by extension)
+      const pf = flowPath.endsWith('.yaml') || flowPath.endsWith('.yml')
+        ? parseFlowYaml(data)
+        : parseFlow(data);
 
       // Validate spec
       validateFlow(pf);

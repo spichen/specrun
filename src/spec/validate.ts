@@ -1,6 +1,12 @@
 import type { Agent, ParsedFlow } from './types.js';
 
-/** ValidateFlow checks a ParsedFlow for spec-level validity. */
+/**
+ * ValidateFlow checks a ParsedFlow for spec-level validity.
+ *
+ * Most structural validation (required fields, correct types) is handled
+ * by the agentspec SDK's Zod schemas during deserialization. This function
+ * checks additional graph-level constraints.
+ */
 export function validateFlow(pf: ParsedFlow): void {
   const errs: string[] = [];
 
@@ -8,20 +14,12 @@ export function validateFlow(pf: ParsedFlow): void {
     errs.push('flow name is required');
   }
 
-  if (pf.component_type !== 'Flow') {
-    errs.push(
-      `expected component_type 'Flow', got "${pf.component_type}"`,
-    );
-  }
-
   if (pf.parsedNodes.length === 0) {
     errs.push('flow must have at least one node');
   }
 
-  let hasStart = false;
-  let hasEnd = false;
+  // Check for duplicate node names
   const nodeNames = new Map<string, number>();
-
   for (const n of pf.parsedNodes) {
     const name = n.name;
     const count = (nodeNames.get(name) ?? 0) + 1;
@@ -29,92 +27,36 @@ export function validateFlow(pf: ParsedFlow): void {
     if (count > 1) {
       errs.push(`duplicate node name "${name}"`);
     }
-    if (n.component_type === 'StartNode') {
-      hasStart = true;
-    }
-    if (n.component_type === 'EndNode') {
-      hasEnd = true;
-    }
-  }
-
-  if (!hasStart) {
-    errs.push('flow must have a StartNode');
-  }
-  if (!hasEnd) {
-    errs.push('flow must have an EndNode');
   }
 
   // Validate control flow edges reference valid nodes
-  for (let i = 0; i < pf.control_flow_connections.length; i++) {
-    const edge = pf.control_flow_connections[i];
-    if (!nodeNames.has(edge.from_node)) {
+  for (let i = 0; i < pf.controlFlowConnections.length; i++) {
+    const edge = pf.controlFlowConnections[i];
+    if (!nodeNames.has(edge.fromNode)) {
       errs.push(
-        `control_flow_connections[${i}]: from_node "${edge.from_node}" not found`,
+        `controlFlowConnections[${i}]: fromNode "${edge.fromNode}" not found`,
       );
     }
-    if (!nodeNames.has(edge.to_node)) {
+    if (!nodeNames.has(edge.toNode)) {
       errs.push(
-        `control_flow_connections[${i}]: to_node "${edge.to_node}" not found`,
+        `controlFlowConnections[${i}]: toNode "${edge.toNode}" not found`,
       );
     }
   }
 
   // Validate data flow edges reference valid nodes
-  const dataEdges = pf.data_flow_connections ?? [];
+  const dataEdges = pf.dataFlowConnections ?? [];
   for (let i = 0; i < dataEdges.length; i++) {
     const edge = dataEdges[i];
-    if (!nodeNames.has(edge.source_node)) {
+    if (!nodeNames.has(edge.sourceNode)) {
       errs.push(
-        `data_flow_connections[${i}]: source_node "${edge.source_node}" not found`,
+        `dataFlowConnections[${i}]: sourceNode "${edge.sourceNode}" not found`,
       );
     }
-    if (!nodeNames.has(edge.destination_node)) {
+    if (!nodeNames.has(edge.destinationNode)) {
       errs.push(
-        `data_flow_connections[${i}]: destination_node "${edge.destination_node}" not found`,
+        `dataFlowConnections[${i}]: destinationNode "${edge.destinationNode}" not found`,
       );
-    }
-  }
-
-  // Validate node-specific requirements
-  for (const n of pf.parsedNodes) {
-    if (n.component_type === 'AgentNode') {
-      if (!n.agent) {
-        errs.push(`AgentNode "${n.name}" must have an agent`);
-      } else {
-        if (!n.agent.system_prompt) {
-          errs.push(
-            `AgentNode "${n.name}": agent must have a system_prompt`,
-          );
-        }
-        if (!n.agent.llm_config) {
-          errs.push(
-            `AgentNode "${n.name}": agent must have llm_config`,
-          );
-        }
-      }
-    }
-
-    if (n.component_type === 'LlmNode') {
-      if (!n.prompt_template) {
-        errs.push(`LlmNode "${n.name}" must have a prompt_template`);
-      }
-      if (!n.llm_config) {
-        errs.push(`LlmNode "${n.name}" must have llm_config`);
-      }
-    }
-
-    if (n.component_type === 'BranchingNode') {
-      if (!n.mapping || Object.keys(n.mapping).length === 0) {
-        errs.push(
-          `BranchingNode "${n.name}" must have a non-empty mapping`,
-        );
-      }
-    }
-
-    if (n.component_type === 'ToolNode') {
-      if (!n.tool) {
-        errs.push(`ToolNode "${n.name}" must have a tool`);
-      }
     }
   }
 
@@ -130,16 +72,10 @@ export function validateAgent(agent: Agent): void {
   if (!agent.name) {
     errs.push('agent name is required');
   }
-  if (agent.component_type !== 'Agent') {
+  if (agent.componentType !== 'Agent') {
     errs.push(
-      `expected component_type 'Agent', got "${agent.component_type}"`,
+      `expected componentType 'Agent', got "${agent.componentType}"`,
     );
-  }
-  if (!agent.system_prompt) {
-    errs.push('agent must have a system_prompt');
-  }
-  if (!agent.llm_config) {
-    errs.push('agent must have llm_config');
   }
 
   if (errs.length > 0) {

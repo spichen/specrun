@@ -21,14 +21,14 @@ export function compile(
 
     const cn: CompiledNode = {
       name,
-      type: n.component_type,
+      type: n.componentType,
       specNode: n,
       executor,
       edges: [],
       inputMappings: new Map(),
     };
 
-    if (n.component_type === 'StartNode') {
+    if (n.componentType === 'StartNode') {
       start = name;
     }
 
@@ -40,28 +40,28 @@ export function compile(
   }
 
   // Attach control flow edges to nodes
-  for (const edge of pf.control_flow_connections) {
-    const cn = nodes.get(edge.from_node);
+  for (const edge of pf.controlFlowConnections) {
+    const cn = nodes.get(edge.fromNode);
     if (!cn) {
       throw new Error(
-        `compile: control flow edge from_node "${edge.from_node}" not found`,
+        `compile: control flow edge fromNode "${edge.fromNode}" not found`,
       );
     }
     cn.edges.push(edge);
   }
 
   // Build data flow input mappings per node
-  const dataEdges = pf.data_flow_connections ?? [];
+  const dataEdges = pf.dataFlowConnections ?? [];
   for (const edge of dataEdges) {
-    const cn = nodes.get(edge.destination_node);
+    const cn = nodes.get(edge.destinationNode);
     if (!cn) {
       throw new Error(
-        `compile: data flow edge destination_node "${edge.destination_node}" not found`,
+        `compile: data flow edge destinationNode "${edge.destinationNode}" not found`,
       );
     }
-    cn.inputMappings.set(edge.destination_input, {
-      sourceNode: edge.source_node,
-      sourceOutput: edge.source_output,
+    cn.inputMappings.set(edge.destinationInput, {
+      sourceNode: edge.sourceNode,
+      sourceOutput: edge.sourceOutput,
     });
   }
 
@@ -69,7 +69,7 @@ export function compile(
 }
 
 function buildExecutor(n: SpecNode, deps: Dependencies): NodeExecutor {
-  switch (n.component_type) {
+  switch (n.componentType) {
     case 'StartNode':
       return new StartExecutor(n);
     case 'EndNode':
@@ -84,7 +84,7 @@ function buildExecutor(n: SpecNode, deps: Dependencies): NodeExecutor {
       return new BranchingExecutor(n, deps);
     default:
       throw new Error(
-        `unknown node type: ${(n as SpecNode).component_type}`,
+        `unknown node type: ${(n as SpecNode).componentType}`,
       );
   }
 }

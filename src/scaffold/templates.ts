@@ -1,59 +1,16 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-const flowTemplate = `{
-  "component_type": "Flow",
-  "agentspec_version": "26.1.0",
-  "name": "my-flow",
-  "start_node": {
-    "component_type": "StartNode",
-    "name": "start",
-    "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
-  },
-  "nodes": [
-    {
-      "component_type": "StartNode",
-      "name": "start",
-      "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
-    },
-    {
-      "component_type": "AgentNode",
-      "name": "assistant",
-      "agent": {
-        "component_type": "Agent",
-        "name": "assistant-agent",
-        "system_prompt": "You are a helpful assistant. Answer the user's question: {{query}}",
-        "llm_config": {
-          "component_type": "OpenAIConfig",
-          "model_id": "gpt-4o"
-        },
-        "tools": [
-          {
-            "component_type": "ServerTool",
-            "name": "example_tool",
-            "description": "An example tool that echoes input",
-            "inputs": [{"json_schema": {"title": "message", "type": "string"}}],
-            "outputs": [{"json_schema": {"title": "response", "type": "string"}}]
-          }
-        ]
-      }
-    },
-    {
-      "component_type": "EndNode",
-      "name": "end",
-      "inputs": [{"json_schema": {"title": "result", "type": "string"}}]
-    }
-  ],
-  "control_flow_connections": [
-    {"from_node": "start", "to_node": "assistant"},
-    {"from_node": "assistant", "to_node": "end"}
-  ],
-  "data_flow_connections": [
-    {"source_node": "start", "source_output": "query", "destination_node": "assistant", "destination_input": "query"},
-    {"source_node": "assistant", "source_output": "result", "destination_node": "end", "destination_input": "result"}
-  ]
-}
-`;
+import {
+  createStartNode,
+  createEndNode,
+  createAgentNode,
+  createAgent,
+  createOpenAiConfig,
+  createServerTool,
+  stringProperty,
+  FlowBuilder,
+  AgentSpecSerializer,
+} from 'agentspec';
 
 const toolTemplate = `#!/usr/bin/env bash
 # Example tool: reads JSON from stdin, writes JSON to stdout
@@ -67,6 +24,50 @@ MESSAGE=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin
 echo "{\\"response\\": \\"Echo: $MESSAGE\\"}"
 `;
 
+function generateFlowJson(): string {
+  const start = createStartNode({
+    name: 'start',
+    outputs: [stringProperty({ title: 'query' })],
+  });
+  const agent = createAgent({
+    name: 'assistant-agent',
+    systemPrompt:
+      "You are a helpful assistant. Answer the user's question: {{query}}",
+    llmConfig: createOpenAiConfig({ name: 'openai', modelId: 'gpt-4o' }),
+    tools: [
+      createServerTool({
+        name: 'example_tool',
+        description: 'An example tool that echoes input',
+        inputs: [stringProperty({ title: 'message' })],
+        outputs: [stringProperty({ title: 'response' })],
+      }),
+    ],
+  });
+  const assistant = createAgentNode({
+    name: 'assistant',
+    agent,
+    inputs: [stringProperty({ title: 'query' })],
+    outputs: [stringProperty({ title: 'result' })],
+  });
+  const end = createEndNode({
+    name: 'end',
+    inputs: [stringProperty({ title: 'result' })],
+  });
+
+  const builder = new FlowBuilder();
+  builder.addNode(start);
+  builder.addNode(assistant);
+  builder.addNode(end);
+  builder.addEdge(start, assistant);
+  builder.addEdge(assistant, end);
+  builder.addDataEdge(start, assistant, 'query');
+  builder.addDataEdge(assistant, end, 'result');
+
+  const flow = builder.build('my-flow');
+  const serializer = new AgentSpecSerializer();
+  return serializer.toJson(flow, { indent: 2 }) as string;
+}
+
 /** Generate creates a new project in the given directory. */
 export function generate(dir: string): void {
   const toolsDir = join(dir, 'tools');
@@ -78,7 +79,7 @@ export function generate(dir: string): void {
 
   const flowPath = join(dir, 'flow.json');
   try {
-    writeFileSync(flowPath, flowTemplate, { mode: 0o644 });
+    writeFileSync(flowPath, generateFlowJson() + '\n', { mode: 0o644 });
   } catch (err) {
     throw new Error(`scaffold: failed to write flow.json: ${err}`);
   }

@@ -27,11 +27,11 @@ export class LLMExecutor implements NodeExecutor {
       );
     }
 
-    const prompt = substituteTemplate(this.node.prompt_template, input);
+    const prompt = substituteTemplate(this.node.promptTemplate, input);
 
     let model = 'gpt-4o';
-    if (this.node.llm_config?.model_id) {
-      model = this.node.llm_config.model_id;
+    if (this.node.llmConfig?.modelId) {
+      model = this.node.llmConfig.modelId;
     }
 
     const resp = await this.deps.llmProvider.chatCompletion(signal, {

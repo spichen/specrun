@@ -17,8 +17,8 @@ describe('parseFlow', () => {
     let hasStart = false;
     let hasEnd = false;
     for (const n of pf.parsedNodes) {
-      if (n.component_type === 'StartNode') hasStart = true;
-      if (n.component_type === 'EndNode') hasEnd = true;
+      if (n.componentType === 'StartNode') hasStart = true;
+      if (n.componentType === 'EndNode') hasEnd = true;
     }
     expect(hasStart).toBe(true);
     expect(hasEnd).toBe(true);
@@ -34,7 +34,7 @@ describe('parseFlow', () => {
     expect(pf.name).toBe('branching-flow');
 
     const bn = pf.parsedNodes.find(
-      (n) => n.component_type === 'BranchingNode',
+      (n) => n.componentType === 'BranchingNode',
     ) as BranchingNode | undefined;
     expect(bn).toBeDefined();
     expect(Object.keys(bn!.mapping).length).toBe(3);
@@ -48,7 +48,7 @@ describe('parseFlow', () => {
     const pf = parseFlow(data);
 
     const an = pf.parsedNodes.find(
-      (n) => n.component_type === 'AgentNode',
+      (n) => n.componentType === 'AgentNode',
     ) as AgentNode | undefined;
     expect(an).toBeDefined();
     expect(an!.agent).toBeDefined();
@@ -68,12 +68,16 @@ describe('parseComponent', () => {
       component_type: 'Agent',
       name: 'test-agent',
       system_prompt: 'hello',
-      llm_config: { model_id: 'gpt-4o' },
+      llm_config: {
+        component_type: 'OpenAiConfig',
+        name: 'openai',
+        model_id: 'gpt-4o',
+      },
     });
 
     const comp = parseComponent(agentJSON);
     const agent = comp as Agent;
     expect(agent.name).toBe('test-agent');
-    expect(agent.component_type).toBe('Agent');
+    expect(agent.componentType).toBe('Agent');
   });
 });

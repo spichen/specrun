@@ -1,41 +1,36 @@
-/** Component is the base for all Agent Spec types. */
-export interface Component {
-  id?: string;
-  name: string;
-  description?: string;
-  component_type: string;
-  agentspec_version?: string;
-  metadata?: Record<string, unknown>;
-}
+/**
+ * Core type definitions for specrun.
+ *
+ * Uses agentspec SDK types for components, with specrun-specific types
+ * for the graph representation (string-based edge references).
+ */
+import type { ComponentBase, Property } from 'agentspec';
 
-/** Property represents a JSON-Schema-based property definition. */
-export interface Property {
-  json_schema: Record<string, unknown>;
-}
+// Re-export SDK Property type
+export type { Property } from 'agentspec';
 
-/** Returns the "title" field from the JSON schema. */
+/** Returns the "title" field from a Property. */
 export function propertyTitle(p: Property): string {
-  const t = p.json_schema['title'];
-  return typeof t === 'string' ? t : '';
+  return p.title ?? '';
 }
 
-/** Returns the "type" field from the JSON schema. */
+/** Returns the "type" field from a Property. */
 export function propertyType(p: Property): string {
-  const t = p.json_schema['type'];
+  const t = p.type;
   return typeof t === 'string' ? t : '';
 }
 
 /** LLMConfig holds LLM provider configuration. */
 export interface LLMConfig {
-  component_type?: string;
-  model_id: string;
+  componentType?: string;
+  modelId: string;
   url?: string;
-  default_generation_parameters?: Record<string, unknown>;
+  defaultGenerationParameters?: Record<string, unknown>;
 }
 
 /** ToolSpec defines a tool in Agent Spec. */
 export interface ToolSpec {
-  component_type: string;
+  componentType: string;
   name: string;
   description?: string;
   inputs?: Property[];
@@ -43,80 +38,82 @@ export interface ToolSpec {
 }
 
 /** Agent represents an Agent Spec Agent component. */
-export interface Agent extends Component {
-  system_prompt?: string;
-  llm_config?: LLMConfig;
+export interface Agent {
+  componentType: string;
+  name: string;
+  description?: string;
+  systemPrompt?: string;
+  llmConfig?: LLMConfig;
   tools?: ToolSpec[];
   inputs?: Property[];
   outputs?: Property[];
-  human_in_the_loop?: boolean;
+  humanInTheLoop?: boolean;
 }
 
-/** Flow represents an Agent Spec Flow component. */
-export interface Flow extends Component {
-  start_node: unknown;
-  nodes: unknown[];
-  control_flow_connections: ControlFlowEdge[];
-  data_flow_connections?: DataFlowEdge[];
-}
-
-/** ControlFlowEdge represents a control flow connection between nodes. */
+/** ControlFlowEdge uses string node names for graph traversal. */
 export interface ControlFlowEdge {
-  from_node: string;
-  from_branch?: string;
-  to_node: string;
+  fromNode: string;
+  fromBranch?: string;
+  toNode: string;
 }
 
-/** DataFlowEdge represents a data flow connection between nodes. */
+/** DataFlowEdge uses string node names for graph traversal. */
 export interface DataFlowEdge {
-  source_node: string;
-  source_output: string;
-  destination_node: string;
-  destination_input: string;
+  sourceNode: string;
+  sourceOutput: string;
+  destinationNode: string;
+  destinationInput: string;
 }
 
 /** StartNode is the entry point of a flow. */
-export interface StartNode extends Component {
-  component_type: 'StartNode';
+export interface StartNode {
+  componentType: 'StartNode';
+  name: string;
   inputs?: Property[];
   outputs?: Property[];
 }
 
 /** EndNode is the exit point of a flow. */
-export interface EndNode extends Component {
-  component_type: 'EndNode';
-  branch_name?: string;
+export interface EndNode {
+  componentType: 'EndNode';
+  name: string;
+  branchName?: string;
   inputs?: Property[];
+  outputs?: Property[];
 }
 
 /** AgentNode wraps an Agent within a flow. */
-export interface AgentNode extends Component {
-  component_type: 'AgentNode';
+export interface AgentNode {
+  componentType: 'AgentNode';
+  name: string;
   agent?: Agent;
   inputs?: Property[];
   outputs?: Property[];
 }
 
 /** ToolNode executes a tool within a flow. */
-export interface ToolNode extends Component {
-  component_type: 'ToolNode';
+export interface ToolNode {
+  componentType: 'ToolNode';
+  name: string;
   tool?: ToolSpec;
   inputs?: Property[];
   outputs?: Property[];
 }
 
 /** LLMNode runs a prompt template through an LLM. */
-export interface LLMNode extends Component {
-  component_type: 'LlmNode';
-  llm_config?: LLMConfig;
-  prompt_template: string;
+export interface LLMNode {
+  componentType: 'LlmNode';
+  name: string;
+  llmConfig?: LLMConfig;
+  promptTemplate: string;
   inputs?: Property[];
   outputs?: Property[];
 }
 
 /** BranchingNode routes execution based on a mapping. */
-export interface BranchingNode extends Component {
-  component_type: 'BranchingNode';
+export interface BranchingNode {
+  componentType: 'BranchingNode';
+  name: string;
   mapping: Record<string, string>;
   inputs?: Property[];
 }
@@ -135,9 +132,19 @@ export function nodeName(n: SpecNode): string {
   return n.name;
 }
 
-/** Returns the node type (component_type). */
+/** Returns the node type (componentType). */
 export function nodeType(n: SpecNode): string {
-  return n.component_type;
+  return n.componentType;
+}
+
+/** Flow represents the raw flow structure. */
+export interface Flow {
+  name: string;
+  componentType: string;
+  startNode: unknown;
+  nodes: unknown[];
+  controlFlowConnections: ControlFlowEdge[];
+  dataFlowConnections?: DataFlowEdge[];
 }
 
 /** ParsedFlow holds the fully parsed flow with resolved nodes. */
