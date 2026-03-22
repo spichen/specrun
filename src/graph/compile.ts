@@ -1,0 +1,90 @@
+import type { ParsedFlow, SpecNode } from '../spec/types.js';
+import type { Dependencies } from '../node/types.js';
+import type { NodeExecutor } from '../node/types.js';
+import { StartExecutor, EndExecutor, BranchingExecutor } from '../node/branching.js';
+import { AgentExecutor } from '../node/agent.js';
+import { LLMExecutor } from '../node/llm.js';
+import { ToolNodeExecutor } from '../node/tool.js';
+import { CompiledGraph, type CompiledNode, type DataSource } from './types.js';
+
+/** Compile converts a ParsedFlow into a CompiledGraph ready for execution. */
+export function compile(
+  pf: ParsedFlow,
+  deps: Dependencies,
+): CompiledGraph {
+  const nodes = new Map<string, CompiledNode>();
+  let start = '';
+
+  for (const n of pf.parsedNodes) {
+    const name = n.name;
+    const executor = buildExecutor(n, deps);
+
+    const cn: CompiledNode = {
+      name,
+      type: n.component_type,
+      specNode: n,
+      executor,
+      edges: [],
+      inputMappings: new Map(),
+    };
+
+    if (n.component_type === 'StartNode') {
+      start = name;
+    }
+
+    nodes.set(name, cn);
+  }
+
+  if (!start) {
+    throw new Error('compile: no StartNode found');
+  }
+
+  // Attach control flow edges to nodes
+  for (const edge of pf.control_flow_connections) {
+    const cn = nodes.get(edge.from_node);
+    if (!cn) {
+      throw new Error(
+        `compile: control flow edge from_node "${edge.from_node}" not found`,
+      );
+    }
+    cn.edges.push(edge);
+  }
+
+  // Build data flow input mappings per node
+  const dataEdges = pf.data_flow_connections ?? [];
+  for (const edge of dataEdges) {
+    const cn = nodes.get(edge.destination_node);
+    if (!cn) {
+      throw new Error(
+        `compile: data flow edge destination_node "${edge.destination_node}" not found`,
+      );
+    }
+    cn.inputMappings.set(edge.destination_input, {
+      sourceNode: edge.source_node,
+      sourceOutput: edge.source_output,
+    });
+  }
+
+  return new CompiledGraph(pf.name, nodes, start, dataEdges);
+}
+
+function buildExecutor(n: SpecNode, deps: Dependencies): NodeExecutor {
+  switch (n.component_type) {
+    case 'StartNode':
+      return new StartExecutor(n);
+    case 'EndNode':
+      return new EndExecutor(n);
+    case 'AgentNode':
+      return new AgentExecutor(n, deps);
+    case 'LlmNode':
+      return new LLMExecutor(n, deps);
+    case 'ToolNode':
+      return new ToolNodeExecutor(n, deps);
+    case 'BranchingNode':
+      return new BranchingExecutor(n, deps);
+    default:
+      throw new Error(
+        `unknown node type: ${(n as SpecNode).component_type}`,
+      );
+  }
+}

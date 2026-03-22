@@ -1,0 +1,29 @@
+/** ToolDef represents a discovered external tool. */
+export interface ToolDef {
+  name: string;
+  description: string;
+  path: string;
+  inputSchema?: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+}
+
+/** ExecResult holds the result of executing an external tool. */
+export interface ExecResult {
+  output: Record<string, unknown>;
+  stderr: string;
+}
+
+/** Executor runs external tools. */
+export interface Executor {
+  execute(
+    signal: AbortSignal | undefined,
+    toolPath: string,
+    input: Record<string, unknown>,
+  ): Promise<ExecResult>;
+}
+
+/** Registry holds discovered tools and provides lookup. */
+export interface Registry {
+  lookup(name: string): [ToolDef, boolean];
+  all(): ToolDef[];
+}

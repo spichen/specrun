@@ -1,0 +1,28 @@
+{
+  "component_type": "Flow",
+  "agentspec_version": "26.1.0",
+  "name": "simple-flow",
+  "start_node": {
+    "component_type": "StartNode",
+    "name": "start",
+    "inputs": [{"json_schema": {"title": "input", "type": "string"}}]
+  },
+  "nodes": [
+    {
+      "component_type": "StartNode",
+      "name": "start",
+      "inputs": [{"json_schema": {"title": "input", "type": "string"}}]
+    },
+    {
+      "component_type": "EndNode",
+      "name": "end",
+      "inputs": [{"json_schema": {"title": "input", "type": "string"}}]
+    }
+  ],
+  "control_flow_connections": [
+    {"from_node": "start", "to_node": "end"}
+  ],
+  "data_flow_connections": [
+    {"source_node": "start", "source_output": "input", "destination_node": "end", "destination_input": "input"}
+  ]
+}

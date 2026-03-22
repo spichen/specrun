@@ -1,0 +1,59 @@
+{
+  "component_type": "Flow",
+  "agentspec_version": "26.1.0",
+  "name": "research-flow",
+  "start_node": {
+    "component_type": "StartNode",
+    "name": "start",
+    "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
+  },
+  "nodes": [
+    {
+      "component_type": "StartNode",
+      "name": "start",
+      "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
+    },
+    {
+      "component_type": "AgentNode",
+      "name": "researcher",
+      "agent": {
+        "component_type": "Agent",
+        "name": "research-agent",
+        "system_prompt": "You are a research assistant. Use tools to find information about: {{query}}",
+        "llm_config": {
+          "component_type": "OpenAIConfig",
+          "model_id": "gpt-4o"
+        },
+        "tools": [
+          {
+            "component_type": "ServerTool",
+            "name": "web_search",
+            "description": "Search the web for information",
+            "inputs": [{"json_schema": {"title": "query", "type": "string"}}],
+            "outputs": [{"json_schema": {"title": "results", "type": "string"}}]
+          },
+          {
+            "component_type": "ServerTool",
+            "name": "calculator",
+            "description": "Perform mathematical calculations",
+            "inputs": [{"json_schema": {"title": "expression", "type": "string"}}],
+            "outputs": [{"json_schema": {"title": "result", "type": "string"}}]
+          }
+        ]
+      }
+    },
+    {
+      "component_type": "EndNode",
+      "name": "end",
+      "inputs": [{"json_schema": {"title": "result", "type": "string"}}]
+    }
+  ],
+  "control_flow_connections": [
+    {"from_node": "start", "to_node": "researcher"},
+    {"from_node": "researcher", "to_node": "end"}
+  ],
+  "data_flow_connections": [
+    {"source_node": "start", "source_output": "query", "destination_node": "researcher", "destination_input": "query"},
+    {"source_node": "researcher", "source_output": "result", "destination_node": "end", "destination_input": "result"}
+  ]
+}

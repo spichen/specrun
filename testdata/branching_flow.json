@@ -1,0 +1,54 @@
+{
+  "component_type": "Flow",
+  "agentspec_version": "26.1.0",
+  "name": "branching-flow",
+  "start_node": {
+    "component_type": "StartNode",
+    "name": "start",
+    "inputs": [{"json_schema": {"title": "category", "type": "string"}}]
+  },
+  "nodes": [
+    {
+      "component_type": "StartNode",
+      "name": "start",
+      "inputs": [{"json_schema": {"title": "category", "type": "string"}}]
+    },
+    {
+      "component_type": "BranchingNode",
+      "name": "router",
+      "mapping": {
+        "tech": "tech_branch",
+        "science": "science_branch",
+        "DEFAULT_BRANCH": "default_branch"
+      },
+      "inputs": [{"json_schema": {"title": "branching_mapping_key", "type": "string"}}]
+    },
+    {
+      "component_type": "EndNode",
+      "name": "tech_end",
+      "branch_name": "tech_branch",
+      "inputs": [{"json_schema": {"title": "result", "type": "string"}}]
+    },
+    {
+      "component_type": "EndNode",
+      "name": "science_end",
+      "branch_name": "science_branch",
+      "inputs": [{"json_schema": {"title": "result", "type": "string"}}]
+    },
+    {
+      "component_type": "EndNode",
+      "name": "default_end",
+      "branch_name": "default_branch",
+      "inputs": [{"json_schema": {"title": "result", "type": "string"}}]
+    }
+  ],
+  "control_flow_connections": [
+    {"from_node": "start", "to_node": "router"},
+    {"from_node": "router", "from_branch": "tech_branch", "to_node": "tech_end"},
+    {"from_node": "router", "from_branch": "science_branch", "to_node": "science_end"},
+    {"from_node": "router", "from_branch": "default_branch", "to_node": "default_end"}
+  ],
+  "data_flow_connections": [
+    {"source_node": "start", "source_output": "category", "destination_node": "router", "destination_input": "branching_mapping_key"}
+  ]
+}

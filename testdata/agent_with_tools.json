@@ -1,0 +1,52 @@
+{
+  "component_type": "Flow",
+  "agentspec_version": "26.1.0",
+  "name": "agent-with-tools",
+  "start_node": {
+    "component_type": "StartNode",
+    "name": "start",
+    "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
+  },
+  "nodes": [
+    {
+      "component_type": "StartNode",
+      "name": "start",
+      "inputs": [{"json_schema": {"title": "query", "type": "string"}}]
+    },
+    {
+      "component_type": "AgentNode",
+      "name": "agent",
+      "agent": {
+        "component_type": "Agent",
+        "name": "test-agent",
+        "system_prompt": "You are a helpful assistant. Answer: {{query}}",
+        "llm_config": {
+          "component_type": "OpenAIConfig",
+          "model_id": "gpt-4o"
+        },
+        "tools": [
+          {
+            "component_type": "ServerTool",
+            "name": "echo_tool",
+            "description": "Echoes the input back",
+            "inputs": [{"json_schema": {"title": "message", "type": "string"}}],
+            "outputs": [{"json_schema": {"title": "response", "type": "string"}}]
+          }
+        ]
+      }
+    },
+    {
+      "component_type": "EndNode",
+      "name": "end",
+      "inputs": [{"json_schema": {"title": "result", "type": "string"}}]
+    }
+  ],
+  "control_flow_connections": [
+    {"from_node": "start", "to_node": "agent"},
+    {"from_node": "agent", "to_node": "end"}
+  ],
+  "data_flow_connections": [
+    {"source_node": "start", "source_output": "query", "destination_node": "agent", "destination_input": "query"},
+    {"source_node": "agent", "source_output": "result", "destination_node": "end", "destination_input": "result"}
+  ]
+}
