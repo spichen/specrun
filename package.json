@@ -1,11 +1,11 @@
 {
-  "name": "agentflow",
+  "name": "specrun",
   "version": "0.1.0",
   "description": "Lightweight CLI agentic workflow framework",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "agentflow": "dist/index.js"
+    "specrun": "dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",

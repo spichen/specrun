@@ -7,7 +7,7 @@ import { FileRegistry } from '../registry.js';
 function makeTempDir(): string {
   const dir = join(
     tmpdir(),
-    `agentflow-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    `specrun-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
   mkdirSync(dir, { recursive: true });
   return dir;
