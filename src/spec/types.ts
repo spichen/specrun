@@ -5,6 +5,7 @@
  * for the graph representation (string-based edge references).
  */
 import type { ComponentBase, Property } from 'agentspec';
+import type { JsonSchema } from '../llm/types.js';
 
 // Re-export SDK Property type
 export type { Property } from 'agentspec';
@@ -20,7 +21,7 @@ export interface LLMConfig {
   modelId: string;
   url?: string;
   apiKey?: string;
-  defaultGenerationParameters?: Record<string, unknown>;
+  defaultGenerationParameters?: JsonSchema;
 }
 
 /** ToolSpec defines a tool in Agent Spec. */

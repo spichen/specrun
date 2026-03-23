@@ -2,6 +2,7 @@ import { AgentSpecDeserializer } from 'agentspec';
 import type { ComponentBase } from 'agentspec';
 import { toSpecFlow } from './adapter.js';
 import type { Agent, ParsedFlow } from './types.js';
+import { SpecError } from '../errors.js';
 
 const deserializer = new AgentSpecDeserializer();
 
@@ -27,8 +28,8 @@ export function parseAgent(data: string | Buffer): Agent {
 
   const agent = component as unknown as Agent;
   if (agent.componentType !== 'Agent') {
-    throw new Error(
-      `spec: expected componentType 'Agent', got "${agent.componentType}"`,
+    throw new SpecError(
+      `expected componentType 'Agent', got "${agent.componentType}"`,
     );
   }
 
@@ -48,8 +49,8 @@ export function parseComponent(data: string | Buffer): ParsedFlow | Agent {
     case 'Agent':
       return component as unknown as Agent;
     default:
-      throw new Error(
-        `spec: unsupported top-level componentType "${ct}"`,
+      throw new SpecError(
+        `unsupported top-level componentType "${ct}"`,
       );
   }
 }

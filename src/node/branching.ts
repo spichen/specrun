@@ -1,6 +1,7 @@
 import type { BranchingNode } from '../spec/types.js';
 import { State } from '../state/state.js';
 import type { NodeExecutor, Dependencies } from './types.js';
+import { RunError } from '../errors.js';
 
 const DEFAULT_BRANCH = 'DEFAULT_BRANCH';
 
@@ -21,19 +22,19 @@ export class BranchingExecutor implements NodeExecutor {
     _signal: AbortSignal | undefined,
     input: State,
   ): Promise<State> {
-    let [keyValue, ok] = input.getString('branching_mapping_key');
+    let keyValue = input.getString('branching_mapping_key');
 
-    if (!ok) {
+    if (keyValue === undefined) {
       for (const key of input.keys()) {
-        const [v, found] = input.getString(key);
-        if (found) {
+        const v = input.getString(key);
+        if (v !== undefined) {
           keyValue = v;
           break;
         }
       }
-      if (!keyValue) {
-        throw new Error(
-          `run: BranchingNode "${this.node.name}": no branching_mapping_key in input`,
+      if (keyValue === undefined) {
+        throw new RunError(
+          `BranchingNode "${this.node.name}": no branching_mapping_key in input`,
         );
       }
     }

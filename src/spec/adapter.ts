@@ -4,6 +4,7 @@
  */
 import type { ComponentBase } from 'agentspec';
 import type { ParsedFlow, SpecNode, ControlFlowEdge, DataFlowEdge } from './types.js';
+import { SpecError } from '../errors.js';
 
 /** SDK Flow type (we use structural typing to avoid tight coupling). */
 interface SdkFlow {
@@ -69,8 +70,8 @@ const SUPPORTED_NODE_TYPES = new Set([
 export function toSpecFlow(sdkComponent: ComponentBase): ParsedFlow {
   const flow = sdkComponent as unknown as SdkFlow;
   if (flow.componentType !== 'Flow') {
-    throw new Error(
-      `spec: expected componentType 'Flow', got "${flow.componentType}"`,
+    throw new SpecError(
+      `expected componentType 'Flow', got "${flow.componentType}"`,
     );
   }
 
@@ -108,8 +109,8 @@ export function toSpecFlow(sdkComponent: ComponentBase): ParsedFlow {
 /** Converts an SDK node to specrun's SpecNode type. */
 function toSpecNode(node: SdkNode): SpecNode {
   if (!SUPPORTED_NODE_TYPES.has(node.componentType)) {
-    throw new Error(
-      `spec: specrun does not yet support ${node.componentType} execution. ` +
+    throw new SpecError(
+      `specrun does not yet support ${node.componentType} execution. ` +
         `Supported: ${[...SUPPORTED_NODE_TYPES].join(', ')}`,
     );
   }

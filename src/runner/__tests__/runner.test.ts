@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { parseFlow } from '../../spec/parser.js';
 import { compile } from '../../graph/compile.js';
 import { Runner } from '../runner.js';
-import { defaultOptions } from '../options.js';
+import { DEFAULT_RUNNER_OPTIONS } from '../options.js';
 import type { Event } from '../events.js';
 
 const testdataDir = join(import.meta.dirname, '../../../testdata');
@@ -15,14 +15,12 @@ describe('Runner', () => {
     const pf = parseFlow(data);
     const cg = compile(pf, {});
 
-    const opts = defaultOptions();
+    const opts = { ...DEFAULT_RUNNER_OPTIONS };
     const runner = new Runner(cg, opts);
 
     const result = await runner.run(undefined, { input: 'hello world' });
 
-    const [v, ok] = result.get('input');
-    expect(ok).toBe(true);
-    expect(v).toBe('hello world');
+    expect(result.get('input')).toBe('hello world');
   });
 
   it('runs branching flow', async () => {
@@ -40,7 +38,7 @@ describe('Runner', () => {
     ];
 
     for (const tt of tests) {
-      const opts = defaultOptions();
+      const opts = { ...DEFAULT_RUNNER_OPTIONS };
       const runner = new Runner(cg, opts);
 
       const result = await runner.run(undefined, {
@@ -58,7 +56,7 @@ describe('Runner', () => {
     const cg = compile(pf, {});
 
     const events: Event[] = [];
-    const opts = defaultOptions();
+    const opts = { ...DEFAULT_RUNNER_OPTIONS };
     opts.eventHandler = (e: Event) => {
       events.push(e);
     };

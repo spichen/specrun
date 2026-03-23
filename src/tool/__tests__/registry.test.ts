@@ -28,10 +28,10 @@ describe('FileRegistry', () => {
 
     expect(reg.all().length).toBe(3);
 
-    expect(reg.lookup('tool_a')[1]).toBe(true);
-    expect(reg.lookup('tool_b')[1]).toBe(true);
-    expect(reg.lookup('tool_c')[1]).toBe(true);
-    expect(reg.lookup('readme')[1]).toBe(false);
+    expect(reg.lookup('tool_a')).toBeDefined();
+    expect(reg.lookup('tool_b')).toBeDefined();
+    expect(reg.lookup('tool_c')).toBeDefined();
+    expect(reg.lookup('readme')).toBeUndefined();
   });
 
   it('creates empty registry for empty string', () => {

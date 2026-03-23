@@ -2,6 +2,7 @@ import type { CompiledGraph, CompiledNode } from '../graph/types.js';
 import { State } from '../state/state.js';
 import type { Event } from './events.js';
 import type { RunnerOptions } from './options.js';
+import { RunError } from '../errors.js';
 
 export class Runner {
   constructor(
@@ -26,9 +27,9 @@ export class Runner {
 
     const nodeOutputs = new Map<string, State>();
 
-    const [startNode, ok] = this.graph.getNode(this.graph.start);
-    if (!ok) {
-      throw new Error(`run: start node "${this.graph.start}" not found`);
+    const startNode = this.graph.getNode(this.graph.start);
+    if (!startNode) {
+      throw new RunError(`start node "${this.graph.start}" not found`);
     }
 
     let current: CompiledNode = startNode;
@@ -40,7 +41,7 @@ export class Runner {
       iteration++
     ) {
       if (signal.aborted) {
-        throw new Error('run: context cancelled: operation was aborted');
+        throw new RunError('operation was aborted');
       }
 
       if (this.opts.verbose) {
@@ -94,18 +95,18 @@ export class Runner {
       currentState = currentState.merge(output);
 
       const branch = current.executor.branch();
-      const [next, found] = this.graph.nextNode(current, branch);
-      if (!found) {
-        throw new Error(
-          `run: no next node from "${current.name}" (branch="${branch}")`,
+      const next = this.graph.nextNode(current, branch);
+      if (!next) {
+        throw new RunError(
+          `no next node from "${current.name}" (branch="${branch}")`,
         );
       }
 
       current = next;
     }
 
-    throw new Error(
-      `run: exceeded max iterations (${this.opts.maxIterations})`,
+    throw new RunError(
+      `exceeded max iterations (${this.opts.maxIterations})`,
     );
   }
 
@@ -122,11 +123,8 @@ export class Runner {
     const resolvedData: Record<string, unknown> = {};
     for (const [destInput, src] of cn.inputMappings) {
       const srcOutput = nodeOutputs.get(src.sourceNode);
-      if (srcOutput) {
-        const [val, ok] = srcOutput.get(src.sourceOutput);
-        if (ok) {
-          resolvedData[destInput] = val;
-        }
+      if (srcOutput?.has(src.sourceOutput)) {
+        resolvedData[destInput] = srcOutput.get(src.sourceOutput);
       }
     }
 

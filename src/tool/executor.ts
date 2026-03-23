@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import type { ExecResult, Executor } from './types.js';
+import { ToolError } from '../errors.js';
 
 const DEFAULT_TIMEOUT = 30_000;
 
@@ -23,8 +24,8 @@ export class SubprocessExecutor implements Executor {
       const timer = setTimeout(() => {
         ac.abort();
         reject(
-          new Error(
-            `tool: execution timed out after ${this.timeout}ms`,
+          new ToolError(
+            `execution timed out after ${this.timeout}ms`,
           ),
         );
       }, this.timeout);
@@ -32,14 +33,14 @@ export class SubprocessExecutor implements Executor {
       // If external signal is already aborted, reject immediately
       if (signal?.aborted) {
         clearTimeout(timer);
-        reject(new Error('tool: execution aborted'));
+        reject(new ToolError('execution aborted'));
         return;
       }
 
       const onExternalAbort = () => {
         ac.abort();
         clearTimeout(timer);
-        reject(new Error('tool: execution aborted'));
+        reject(new ToolError('execution aborted'));
       };
       signal?.addEventListener('abort', onExternalAbort, { once: true });
 
@@ -60,7 +61,7 @@ export class SubprocessExecutor implements Executor {
         if (ac.signal.aborted) return; // already handled by timeout
         const stderrStr = Buffer.concat(stderrChunks).toString();
         reject(
-          new Error(`tool: execution failed: ${err.message}: ${stderrStr}`),
+          new ToolError(`execution failed: ${stderrStr}`, { cause: err }),
         );
       });
 
@@ -72,8 +73,8 @@ export class SubprocessExecutor implements Executor {
 
         if (code !== 0) {
           reject(
-            new Error(
-              `tool: execution failed: exit code ${code}: ${stderrStr}`,
+            new ToolError(
+              `execution failed with exit code ${code}: ${stderrStr}`,
             ),
           );
           return;
@@ -87,8 +88,9 @@ export class SubprocessExecutor implements Executor {
             output = JSON.parse(stdoutStr);
           } catch (err) {
             reject(
-              new Error(
-                `tool: failed to parse output JSON: ${err}: raw output: ${stdoutStr}`,
+              new ToolError(
+                `failed to parse output JSON: ${stdoutStr}`,
+                { cause: err },
               ),
             );
             return;

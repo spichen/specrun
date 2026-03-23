@@ -1,10 +1,12 @@
+import type { JsonSchema } from '../llm/types.js';
+
 /** ToolDef represents a discovered external tool. */
 export interface ToolDef {
   name: string;
   description: string;
   path: string;
-  inputSchema?: Record<string, unknown>;
-  outputSchema?: Record<string, unknown>;
+  inputSchema?: JsonSchema;
+  outputSchema?: JsonSchema;
 }
 
 /** ExecResult holds the result of executing an external tool. */
@@ -24,6 +26,6 @@ export interface Executor {
 
 /** Registry holds discovered tools and provides lookup. */
 export interface Registry {
-  lookup(name: string): [ToolDef, boolean];
+  lookup(name: string): ToolDef | undefined;
   all(): ToolDef[];
 }

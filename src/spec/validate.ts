@@ -1,4 +1,5 @@
 import type { Agent, ParsedFlow } from './types.js';
+import { SpecError } from '../errors.js';
 
 /**
  * ValidateFlow checks a ParsedFlow for spec-level validity.
@@ -61,7 +62,7 @@ export function validateFlow(pf: ParsedFlow): void {
   }
 
   if (errs.length > 0) {
-    throw new Error(`validate: ${errs.join('; ')}`);
+    throw new SpecError(errs.join('; '));
   }
 }
 
@@ -79,6 +80,6 @@ export function validateAgent(agent: Agent): void {
   }
 
   if (errs.length > 0) {
-    throw new Error(`validate: ${errs.join('; ')}`);
+    throw new SpecError(errs.join('; '));
   }
 }

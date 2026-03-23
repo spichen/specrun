@@ -16,18 +16,17 @@ export class State {
     return s;
   }
 
-  get(key: string): [unknown, boolean] {
-    if (key in this.data) {
-      return [this.data[key], true];
-    }
-    return [undefined, false];
+  has(key: string): boolean {
+    return key in this.data;
   }
 
-  getString(key: string): [string, boolean] {
-    const [v, ok] = this.get(key);
-    if (!ok) return ['', false];
-    if (typeof v === 'string') return [v, true];
-    return ['', false];
+  get(key: string): unknown {
+    return this.data[key];
+  }
+
+  getString(key: string): string | undefined {
+    const v = this.data[key];
+    return typeof v === 'string' ? v : undefined;
   }
 
   set(key: string, value: unknown): State {

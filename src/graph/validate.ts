@@ -1,4 +1,5 @@
 import type { CompiledGraph } from './types.js';
+import { CompileError } from '../errors.js';
 
 /** Validate checks the compiled graph for structural issues. */
 export function validate(g: CompiledGraph): void {
@@ -50,6 +51,6 @@ export function validate(g: CompiledGraph): void {
   }
 
   if (errs.length > 0) {
-    throw new Error(`validate: ${errs.join('; ')}`);
+    throw new CompileError(errs.join('; '));
   }
 }

@@ -1,6 +1,7 @@
 import type { LLMConfig } from '../spec/types.js';
 import type { Provider } from './types.js';
 import { OpenAIProvider } from './openai.js';
+import { LLMError } from '../errors.js';
 
 /**
  * Supported OpenAI-compatible config types.
@@ -23,8 +24,8 @@ export function createProvider(config: LLMConfig): Provider {
   const configType = config.componentType ?? 'OpenAiConfig';
 
   if (!OPENAI_COMPATIBLE_TYPES.has(configType)) {
-    throw new Error(
-      `unsupported LLM config type "${configType}". ` +
+    throw new LLMError(
+      `unsupported config type "${configType}". ` +
         `Supported: ${[...OPENAI_COMPATIBLE_TYPES].join(', ')}`,
     );
   }

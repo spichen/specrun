@@ -3,6 +3,7 @@ import { State } from '../state/state.js';
 import type { NodeExecutor, Dependencies } from './types.js';
 import { substituteTemplate } from './agent.js';
 import { createProvider } from '../llm/provider.js';
+import { RunError } from '../errors.js';
 
 /** LLMExecutor executes an LlmNode by running a prompt template through the LLM. */
 export class LLMExecutor implements NodeExecutor {
@@ -23,8 +24,8 @@ export class LLMExecutor implements NodeExecutor {
     input: State,
   ): Promise<State> {
     if (!this.node.llmConfig) {
-      throw new Error(
-        `run: LlmNode "${this.node.name}": node has no llmConfig`,
+      throw new RunError(
+        `LlmNode "${this.node.name}": node has no llmConfig`,
       );
     }
 

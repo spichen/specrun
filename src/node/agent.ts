@@ -1,9 +1,10 @@
 import type { AgentNode, ToolSpec } from '../spec/types.js';
 import { propertyTitle } from '../spec/types.js';
 import { State } from '../state/state.js';
-import type { Message, ToolCall, ToolDefinition, Provider } from '../llm/types.js';
+import type { Message, ToolCall, ToolDefinition, Provider, JsonSchema } from '../llm/types.js';
 import type { NodeExecutor, Dependencies } from './types.js';
 import { createProvider } from '../llm/provider.js';
+import { RunError, ToolError } from '../errors.js';
 
 const MAX_TOOL_ROUNDS = 10;
 
@@ -20,7 +21,7 @@ export class AgentExecutor implements NodeExecutor {
 
     const agent = node.agent;
     if (!agent?.llmConfig) {
-      throw new Error(
+      throw new RunError(
         `AgentNode "${node.name}": agent or llmConfig is missing`,
       );
     }
@@ -104,8 +105,8 @@ export class AgentExecutor implements NodeExecutor {
       }
     }
 
-    throw new Error(
-      `run: AgentNode "${this.node.name}" exceeded max tool rounds (${MAX_TOOL_ROUNDS})`,
+    throw new RunError(
+      `AgentNode "${this.node.name}" exceeded max tool rounds (${MAX_TOOL_ROUNDS})`,
     );
   }
 
@@ -117,16 +118,16 @@ export class AgentExecutor implements NodeExecutor {
     try {
       args = JSON.parse(tc.arguments);
     } catch (err) {
-      throw new Error(`failed to parse tool arguments: ${err}`);
+      throw new ToolError(`failed to parse arguments for "${tc.name}"`, { cause: err });
     }
 
     if (!this.deps.toolRegistry || !this.deps.toolExecutor) {
-      throw new Error(`tool "${tc.name}": registry or executor not configured`);
+      throw new ToolError(`"${tc.name}": registry or executor not configured`);
     }
 
-    const [toolDef, ok] = this.deps.toolRegistry.lookup(tc.name);
-    if (!ok) {
-      throw new Error(`tool "${tc.name}" not found in registry`);
+    const toolDef = this.deps.toolRegistry.lookup(tc.name);
+    if (!toolDef) {
+      throw new ToolError(`"${tc.name}" not found in registry`);
     }
 
     if (this.deps.verbose) {
@@ -149,22 +150,21 @@ export class AgentExecutor implements NodeExecutor {
 export function substituteTemplate(template: string, s: State): string {
   let result = template;
   for (const key of s.keys()) {
-    const [v] = s.getString(key);
-    result = result.replaceAll(`{{${key}}}`, v);
+    result = result.replaceAll(`{{${key}}}`, s.getString(key) ?? '');
   }
   return result;
 }
 
 /** Build a JSON Schema object from a ToolSpec's inputs. */
-export function buildToolSchema(t: ToolSpec): Record<string, unknown> {
-  const properties: Record<string, unknown> = {};
+export function buildToolSchema(t: ToolSpec): JsonSchema {
+  const properties: Record<string, JsonSchema> = {};
   const required: string[] = [];
 
   if (t.inputs) {
     for (const input of t.inputs) {
       const name = propertyTitle(input);
       if (!name) continue;
-      const prop: Record<string, unknown> = {};
+      const prop: JsonSchema = {};
       for (const [k, v] of Object.entries(input.jsonSchema)) {
         if (k !== 'title') {
           prop[k] = v;

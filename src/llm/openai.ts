@@ -5,6 +5,7 @@ import type {
   Provider,
   ToolCall,
 } from './types.js';
+import { LLMError } from '../errors.js';
 
 /** OpenAIProvider implements Provider using the OpenAI API. */
 export class OpenAIProvider implements Provider {
@@ -66,7 +67,7 @@ export class OpenAIProvider implements Provider {
             function: {
               name: t.name,
               description: t.description,
-              parameters: t.parameters as Record<string, unknown>,
+              parameters: t.parameters,
             },
           }))
         : undefined;
@@ -82,7 +83,7 @@ export class OpenAIProvider implements Provider {
       );
 
       if (!completion.choices || completion.choices.length === 0) {
-        throw new Error('llm: no choices in response');
+        throw new LLMError('no choices in response');
       }
 
       const choice = completion.choices[0];
@@ -103,8 +104,8 @@ export class OpenAIProvider implements Provider {
 
       return resp;
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith('llm:')) throw err;
-      throw new Error(`llm: OpenAI API error: ${err}`);
+      if (err instanceof LLMError) throw err;
+      throw new LLMError('OpenAI API error', { cause: err });
     }
   }
 }

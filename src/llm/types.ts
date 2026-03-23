@@ -1,3 +1,6 @@
+/** A JSON Schema object. */
+export type JsonSchema = Record<string, unknown>;
+
 /** Role represents a message role. */
 export type Role = 'system' | 'user' | 'assistant' | 'tool';
 
@@ -20,7 +23,7 @@ export interface ToolCall {
 export interface ToolDefinition {
   name: string;
   description: string;
-  parameters: Record<string, unknown>; // JSON Schema
+  parameters: JsonSchema;
 }
 
 /** ChatRequest is a request to the LLM. */

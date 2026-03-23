@@ -4,7 +4,7 @@ import { validate } from '../graph/validate.js';
 import { FileRegistry } from '../tool/registry.js';
 import { SubprocessExecutor } from '../tool/executor.js';
 import { Runner } from '../runner/runner.js';
-import { defaultOptions } from '../runner/options.js';
+import { DEFAULT_RUNNER_OPTIONS } from '../runner/options.js';
 import type { Event } from '../runner/events.js';
 import { collectToolNames } from '../spec/types.js';
 import { loadFlow } from './util.js';
@@ -44,14 +44,13 @@ export const runCommand = new Command('run')
         try {
           inputs = JSON.parse(options.input);
         } catch (err) {
-          throw new Error(`failed to parse --input JSON: ${err}`);
+          throw new Error('failed to parse --input JSON', { cause: err });
         }
       } else {
         inputs = {};
       }
 
-      const opts = defaultOptions();
-      opts.verbose = verbose;
+      const opts = { ...DEFAULT_RUNNER_OPTIONS, verbose };
       if (verbose) {
         opts.eventHandler = (e: Event) => {
           switch (e.type) {

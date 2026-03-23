@@ -18,9 +18,9 @@ describe('compile', () => {
     expect(cg.start).toBe('start');
     expect(cg.nodes.size).toBe(2);
 
-    const [startNode, ok] = cg.getNode('start');
-    expect(ok).toBe(true);
-    expect(startNode.edges.length).toBe(1);
+    const startNode = cg.getNode('start');
+    expect(startNode).toBeDefined();
+    expect(startNode!.edges.length).toBe(1);
   });
 
   it('compiles branching flow', () => {
@@ -33,9 +33,9 @@ describe('compile', () => {
 
     const cg = compile(pf, deps);
 
-    const [router, ok] = cg.getNode('router');
-    expect(ok).toBe(true);
-    expect(router.edges.length).toBe(3);
+    const router = cg.getNode('router');
+    expect(router).toBeDefined();
+    expect(router!.edges.length).toBe(3);
   });
 
   it('builds data flow mappings', () => {
@@ -45,10 +45,10 @@ describe('compile', () => {
 
     const cg = compile(pf, deps);
 
-    const [endNode, ok] = cg.getNode('end');
-    expect(ok).toBe(true);
+    const endNode = cg.getNode('end');
+    expect(endNode).toBeDefined();
 
-    const src = endNode.inputMappings.get('input');
+    const src = endNode!.inputMappings.get('input');
     expect(src).toBeDefined();
     expect(src!.sourceNode).toBe('start');
     expect(src!.sourceOutput).toBe('input');

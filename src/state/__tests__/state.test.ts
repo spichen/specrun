@@ -4,9 +4,7 @@ import { State } from '../state.js';
 describe('State', () => {
   it('creates from data', () => {
     const s = new State({ key: 'value' });
-    const [v, ok] = s.get('key');
-    expect(ok).toBe(true);
-    expect(v).toBe('value');
+    expect(s.get('key')).toBe('value');
   });
 
   it('creates empty from null', () => {
@@ -23,12 +21,8 @@ describe('State', () => {
     const s = new State();
     const s2 = s.set('foo', 'bar');
 
-    const [, ok] = s.get('foo');
-    expect(ok).toBe(false);
-
-    const [v, ok2] = s2.get('foo');
-    expect(ok2).toBe(true);
-    expect(v).toBe('bar');
+    expect(s.has('foo')).toBe(false);
+    expect(s2.get('foo')).toBe('bar');
   });
 
   it('merge combines states with override', () => {
@@ -44,9 +38,7 @@ describe('State', () => {
     };
 
     for (const [k, expected] of Object.entries(tests)) {
-      const [v, ok] = merged.getString(k);
-      expect(ok).toBe(true);
-      expect(v).toBe(expected);
+      expect(merged.getString(k)).toBe(expected);
     }
   });
 
@@ -55,8 +47,7 @@ describe('State', () => {
     let c = s.clone();
     c = c.set('x', 'modified');
 
-    const [v] = s.getString('x');
-    expect(v).toBe('y');
+    expect(s.getString('x')).toBe('y');
   });
 
   it('JSON round-trip', () => {
@@ -65,22 +56,14 @@ describe('State', () => {
     const parsed = JSON.parse(json);
 
     const s2 = new State(parsed);
-    const [v, ok] = s2.getString('name');
-    expect(ok).toBe(true);
-    expect(v).toBe('test');
+    expect(s2.getString('name')).toBe('test');
   });
 
   it('getString returns string values', () => {
     const s = new State({ str: 'hello', num: 42 });
 
-    const [v, ok] = s.getString('str');
-    expect(ok).toBe(true);
-    expect(v).toBe('hello');
-
-    const [, ok2] = s.getString('num');
-    expect(ok2).toBe(false);
-
-    const [, ok3] = s.getString('missing');
-    expect(ok3).toBe(false);
+    expect(s.getString('str')).toBe('hello');
+    expect(s.getString('num')).toBeUndefined();
+    expect(s.getString('missing')).toBeUndefined();
   });
 });

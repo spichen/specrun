@@ -74,20 +74,20 @@ export function generate(dir: string): void {
   try {
     mkdirSync(toolsDir, { recursive: true });
   } catch (err) {
-    throw new Error(`scaffold: failed to create directory: ${err}`);
+    throw new Error('failed to create directory', { cause: err });
   }
 
   const flowPath = join(dir, 'flow.json');
   try {
     writeFileSync(flowPath, generateFlowJson() + '\n', { mode: 0o644 });
   } catch (err) {
-    throw new Error(`scaffold: failed to write flow.json: ${err}`);
+    throw new Error('failed to write flow.json', { cause: err });
   }
 
   const toolPath = join(toolsDir, 'example_tool.sh');
   try {
     writeFileSync(toolPath, toolTemplate, { mode: 0o755 });
   } catch (err) {
-    throw new Error(`scaffold: failed to write example_tool.sh: ${err}`);
+    throw new Error('failed to write example_tool.sh', { cause: err });
   }
 }

@@ -1,6 +1,7 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import type { ToolDef, Registry } from './types.js';
+import { ToolError } from '../errors.js';
 
 /** FileRegistry discovers tools from a directory of executables. */
 export class FileRegistry implements Registry {
@@ -22,10 +23,10 @@ export class FileRegistry implements Registry {
     try {
       info = statSync(toolsDir);
     } catch (err) {
-      throw new Error(`tool: tools directory "${toolsDir}": ${err}`);
+      throw new ToolError(`tools directory "${toolsDir}" not accessible`, { cause: err });
     }
     if (!info.isDirectory()) {
-      throw new Error(`tool: "${toolsDir}" is not a directory`);
+      throw new ToolError(`"${toolsDir}" is not a directory`);
     }
 
     const entries = readdirSync(toolsDir, { withFileTypes: true });
@@ -58,10 +59,8 @@ export class FileRegistry implements Registry {
     return new FileRegistry(tools);
   }
 
-  lookup(name: string): [ToolDef, boolean] {
-    const t = this.tools.get(name);
-    if (t) return [t, true];
-    return [{ name: '', description: '', path: '' }, false];
+  lookup(name: string): ToolDef | undefined {
+    return this.tools.get(name);
   }
 
   all(): ToolDef[] {
@@ -77,8 +76,8 @@ export class FileRegistry implements Registry {
       }
     }
     if (missing.length > 0) {
-      throw new Error(
-        `tool: missing executables for tools: ${missing.join(', ')}`,
+      throw new ToolError(
+        `missing executables for tools: ${missing.join(', ')}`,
       );
     }
   }

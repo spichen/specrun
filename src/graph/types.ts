@@ -26,29 +26,25 @@ export class CompiledGraph {
     public dataFlowEdges: DataFlowEdge[],
   ) {}
 
-  getNode(name: string): [CompiledNode, boolean] {
-    const n = this.nodes.get(name);
-    if (n) return [n, true];
-    return [undefined as unknown as CompiledNode, false];
+  getNode(name: string): CompiledNode | undefined {
+    return this.nodes.get(name);
   }
 
-  /** Resolves the next node, preferring an exact branch match, then falling back to an unbranchd edge. */
-  nextNode(current: CompiledNode, branch: string): [CompiledNode, boolean] {
+  /** Resolves the next node, preferring an exact branch match, then falling back to an unbranched edge. */
+  nextNode(current: CompiledNode, branch: string): CompiledNode | undefined {
     let fallback: CompiledNode | undefined;
 
     for (const edge of current.edges) {
       const edgeBranch = edge.fromBranch ?? '';
       if (branch && edgeBranch === branch) {
         const next = this.nodes.get(edge.toNode);
-        if (next) return [next, true];
+        if (next) return next;
       }
       if (!edgeBranch && !fallback) {
         fallback = this.nodes.get(edge.toNode);
       }
     }
 
-    // Exact match for empty branch, or fallback for non-empty branch
-    if (fallback) return [fallback, true];
-    return [undefined as unknown as CompiledNode, false];
+    return fallback;
   }
 }

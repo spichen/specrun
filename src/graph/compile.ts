@@ -5,6 +5,7 @@ import { AgentExecutor } from '../node/agent.js';
 import { LLMExecutor } from '../node/llm.js';
 import { ToolNodeExecutor } from '../node/tool.js';
 import { CompiledGraph, type CompiledNode, type DataSource } from './types.js';
+import { CompileError } from '../errors.js';
 
 /** Compile converts a ParsedFlow into a CompiledGraph ready for execution. */
 export function compile(
@@ -35,15 +36,15 @@ export function compile(
   }
 
   if (!start) {
-    throw new Error('compile: no StartNode found');
+    throw new CompileError('no StartNode found');
   }
 
   // Attach control flow edges to nodes
   for (const edge of pf.controlFlowConnections) {
     const cn = nodes.get(edge.fromNode);
     if (!cn) {
-      throw new Error(
-        `compile: control flow edge fromNode "${edge.fromNode}" not found`,
+      throw new CompileError(
+        `control flow edge fromNode "${edge.fromNode}" not found`,
       );
     }
     cn.edges.push(edge);
@@ -54,8 +55,8 @@ export function compile(
   for (const edge of dataEdges) {
     const cn = nodes.get(edge.destinationNode);
     if (!cn) {
-      throw new Error(
-        `compile: data flow edge destinationNode "${edge.destinationNode}" not found`,
+      throw new CompileError(
+        `data flow edge destinationNode "${edge.destinationNode}" not found`,
       );
     }
     cn.inputMappings.set(edge.destinationInput, {
@@ -81,7 +82,7 @@ function buildExecutor(n: SpecNode, deps: Dependencies): NodeExecutor {
     case 'BranchingNode':
       return new BranchingExecutor(n, deps);
     default:
-      throw new Error(
+      throw new CompileError(
         `unknown node type: ${(n as SpecNode).componentType}`,
       );
   }
