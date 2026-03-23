@@ -9,7 +9,13 @@ export class State {
     this.data = data ? { ...data } : {};
   }
 
-  /** Get retrieves a value by key. */
+  /** Wrap already-owned data without copying. */
+  private static fromOwned(data: Record<string, unknown>): State {
+    const s = Object.create(State.prototype) as State;
+    (s as unknown as { data: Record<string, unknown> }).data = data;
+    return s;
+  }
+
   get(key: string): [unknown, boolean] {
     if (key in this.data) {
       return [this.data[key], true];
@@ -17,7 +23,6 @@ export class State {
     return [undefined, false];
   }
 
-  /** GetString retrieves a string value by key. */
   getString(key: string): [string, boolean] {
     const [v, ok] = this.get(key);
     if (!ok) return ['', false];
@@ -25,40 +30,30 @@ export class State {
     return ['', false];
   }
 
-  /** Set returns a new State with the given key-value pair added/replaced. */
   set(key: string, value: unknown): State {
-    const newData = { ...this.data };
-    newData[key] = value;
-    return new State(newData);
+    return State.fromOwned({ ...this.data, [key]: value });
   }
 
-  /** Merge returns a new State with all key-value pairs from other merged in. */
   merge(other: State): State {
-    const newData = { ...this.data, ...other.data };
-    return new State(newData);
+    return State.fromOwned({ ...this.data, ...other.data });
   }
 
-  /** Clone returns a deep copy of this State. */
   clone(): State {
-    return new State({ ...this.data });
+    return new State(this.data);
   }
 
-  /** Keys returns all keys in the state. */
   keys(): string[] {
     return Object.keys(this.data);
   }
 
-  /** Data returns the underlying map (as a copy). */
   toData(): Record<string, unknown> {
-    return { ...this.data };
+    return this.toJSON();
   }
 
-  /** toJSON serializes State to a plain object for JSON.stringify. */
   toJSON(): Record<string, unknown> {
     return { ...this.data };
   }
 
-  /** String returns a JSON string representation. */
   toString(): string {
     try {
       return JSON.stringify(this.data);

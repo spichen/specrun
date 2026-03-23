@@ -3,38 +3,19 @@ import { State } from '../state/state.js';
 import type { Event } from './events.js';
 import type { RunnerOptions } from './options.js';
 
-/** Runner executes a compiled graph. */
 export class Runner {
-  private graph: CompiledGraph;
-  private opts: RunnerOptions;
+  constructor(
+    private graph: CompiledGraph,
+    private opts: RunnerOptions,
+  ) {}
 
-  constructor(graph: CompiledGraph, opts: RunnerOptions) {
-    this.graph = graph;
-    this.opts = opts;
-  }
-
-  /** Run executes the flow with the given initial inputs. */
   async run(
     signal: AbortSignal | undefined,
     inputs: Record<string, unknown>,
   ): Promise<State> {
-    // Create a timeout signal
-    const timeoutSignal = AbortSignal.timeout(this.opts.timeout);
-    const combinedAc = new AbortController();
-
-    const onTimeout = () => combinedAc.abort();
-    const onExternal = () => combinedAc.abort();
-    timeoutSignal.addEventListener('abort', onTimeout, { once: true });
-    signal?.addEventListener('abort', onExternal, { once: true });
-
-    const effectiveSignal = combinedAc.signal;
-
-    try {
-      return await this._run(effectiveSignal, inputs);
-    } finally {
-      timeoutSignal.removeEventListener('abort', onTimeout);
-      signal?.removeEventListener('abort', onExternal);
-    }
+    const signals = [AbortSignal.timeout(this.opts.timeout)];
+    if (signal) signals.push(signal);
+    return this._run(AbortSignal.any(signals), inputs);
   }
 
   private async _run(
@@ -75,14 +56,12 @@ export class Runner {
         state: currentState,
       });
 
-      // Resolve inputs from data flow edges
       const nodeInput = this.resolveInputs(
         current,
         nodeOutputs,
         currentState,
       );
 
-      // Execute node with error recovery
       let output: State;
       try {
         output = await current.executor.execute(signal, nodeInput);
@@ -98,7 +77,6 @@ export class Runner {
         throw execErr;
       }
 
-      // Store node outputs
       nodeOutputs.set(current.name, output);
 
       this.emit({
@@ -108,16 +86,13 @@ export class Runner {
         state: output,
       });
 
-      // Check if we've reached an EndNode
       if (current.type === 'EndNode') {
         this.emit({ type: 'flow_complete', state: output });
         return output;
       }
 
-      // Update current state with outputs
       currentState = currentState.merge(output);
 
-      // Resolve next node
       const branch = current.executor.branch();
       const [next, found] = this.graph.nextNode(current, branch);
       if (!found) {
@@ -143,24 +118,22 @@ export class Runner {
       return currentState;
     }
 
-    let resolved = new State();
+    // Build resolved data in one shot to avoid chained State allocations
+    const resolvedData: Record<string, unknown> = {};
     for (const [destInput, src] of cn.inputMappings) {
       const srcOutput = nodeOutputs.get(src.sourceNode);
       if (srcOutput) {
         const [val, ok] = srcOutput.get(src.sourceOutput);
         if (ok) {
-          resolved = resolved.set(destInput, val);
+          resolvedData[destInput] = val;
         }
       }
     }
 
-    // Merge with current state (data flow edges take precedence)
-    return currentState.merge(resolved);
+    return currentState.merge(new State(resolvedData));
   }
 
   private emit(e: Event): void {
-    if (this.opts.eventHandler) {
-      this.opts.eventHandler(e);
-    }
+    this.opts.eventHandler?.(e);
   }
 }

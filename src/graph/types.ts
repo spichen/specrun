@@ -19,51 +19,36 @@ export interface CompiledNode {
 
 /** CompiledGraph is the fully compiled and ready-to-execute graph. */
 export class CompiledGraph {
-  name: string;
-  nodes: Map<string, CompiledNode>;
-  start: string;
-  dataFlowEdges: DataFlowEdge[];
-
   constructor(
-    name: string,
-    nodes: Map<string, CompiledNode>,
-    start: string,
-    dataFlowEdges: DataFlowEdge[],
-  ) {
-    this.name = name;
-    this.nodes = nodes;
-    this.start = start;
-    this.dataFlowEdges = dataFlowEdges;
-  }
+    public name: string,
+    public nodes: Map<string, CompiledNode>,
+    public start: string,
+    public dataFlowEdges: DataFlowEdge[],
+  ) {}
 
-  /** GetNode returns a compiled node by name. */
   getNode(name: string): [CompiledNode, boolean] {
     const n = this.nodes.get(name);
     if (n) return [n, true];
     return [undefined as unknown as CompiledNode, false];
   }
 
-  /** NextNode resolves the next node from the current node. */
+  /** Resolves the next node, preferring an exact branch match, then falling back to an unbranchd edge. */
   nextNode(current: CompiledNode, branch: string): [CompiledNode, boolean] {
+    let fallback: CompiledNode | undefined;
+
     for (const edge of current.edges) {
-      if (branch === '' && (edge.fromBranch ?? '') === '') {
+      const edgeBranch = edge.fromBranch ?? '';
+      if (branch && edgeBranch === branch) {
         const next = this.nodes.get(edge.toNode);
         if (next) return [next, true];
       }
-      if (branch !== '' && edge.fromBranch === branch) {
-        const next = this.nodes.get(edge.toNode);
-        if (next) return [next, true];
+      if (!edgeBranch && !fallback) {
+        fallback = this.nodes.get(edge.toNode);
       }
     }
-    // Fallback: if no branch match, try first edge with no branch
-    if (branch !== '') {
-      for (const edge of current.edges) {
-        if ((edge.fromBranch ?? '') === '') {
-          const next = this.nodes.get(edge.toNode);
-          if (next) return [next, true];
-        }
-      }
-    }
+
+    // Exact match for empty branch, or fallback for non-empty branch
+    if (fallback) return [fallback, true];
     return [undefined as unknown as CompiledNode, false];
   }
 }
