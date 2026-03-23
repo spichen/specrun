@@ -14,12 +14,6 @@ export function propertyTitle(p: Property): string {
   return p.title ?? '';
 }
 
-/** Returns the "type" field from a Property. */
-export function propertyType(p: Property): string {
-  const t = p.type;
-  return typeof t === 'string' ? t : '';
-}
-
 /** LLMConfig holds LLM provider configuration. */
 export interface LLMConfig {
   componentType?: string;
@@ -128,16 +122,6 @@ export type SpecNode =
   | LLMNode
   | BranchingNode;
 
-/** Returns the node name. */
-export function nodeName(n: SpecNode): string {
-  return n.name;
-}
-
-/** Returns the node type (componentType). */
-export function nodeType(n: SpecNode): string {
-  return n.componentType;
-}
-
 /** Flow represents the raw flow structure. */
 export interface Flow {
   name: string;
@@ -151,4 +135,26 @@ export interface Flow {
 /** ParsedFlow holds the fully parsed flow with resolved nodes. */
 export interface ParsedFlow extends Flow {
   parsedNodes: SpecNode[];
+}
+
+/** Collect all ServerTool names from a parsed flow. */
+export function collectToolNames(pf: ParsedFlow): string[] {
+  const seen = new Set<string>();
+
+  for (const n of pf.parsedNodes) {
+    const tools =
+      n.componentType === 'AgentNode'
+        ? n.agent?.tools
+        : n.componentType === 'ToolNode' && n.tool?.componentType === 'ServerTool'
+          ? [n.tool]
+          : undefined;
+
+    if (tools) {
+      for (const t of tools) {
+        if (t.componentType === 'ServerTool') seen.add(t.name);
+      }
+    }
+  }
+
+  return [...seen];
 }

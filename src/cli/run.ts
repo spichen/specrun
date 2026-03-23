@@ -1,7 +1,4 @@
-import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import { parseFlow, parseFlowYaml } from '../spec/parser.js';
-import { validateFlow } from '../spec/validate.js';
 import { compile } from '../graph/compile.js';
 import { validate } from '../graph/validate.js';
 import { FileRegistry } from '../tool/registry.js';
@@ -9,7 +6,8 @@ import { SubprocessExecutor } from '../tool/executor.js';
 import { Runner } from '../runner/runner.js';
 import { defaultOptions } from '../runner/options.js';
 import type { Event } from '../runner/events.js';
-import { collectToolNames } from './validate.js';
+import { collectToolNames } from '../spec/types.js';
+import { loadFlow } from './util.js';
 
 export const runCommand = new Command('run')
   .description('Run an Agent Spec flow')
@@ -24,39 +22,23 @@ export const runCommand = new Command('run')
     ) => {
       const verbose = command.parent?.opts().verbose ?? false;
 
-      const data = readFileSync(flowPath, 'utf-8');
+      const pf = loadFlow(flowPath);
 
-      // Parse (detect format by extension)
-      const pf = flowPath.endsWith('.yaml') || flowPath.endsWith('.yml')
-        ? parseFlowYaml(data)
-        : parseFlow(data);
-
-      // Validate spec
-      validateFlow(pf);
-
-      // Set up tool registry
       const reg = FileRegistry.create(options.toolsDir ?? '');
-
-      // Validate tools
       const toolNames = collectToolNames(pf);
       if (toolNames.length > 0) {
         reg.validateTools(toolNames);
       }
 
-      // Set up dependencies
       const deps = {
         toolExecutor: new SubprocessExecutor(),
         toolRegistry: reg,
         verbose,
       };
 
-      // Compile graph
       const cg = compile(pf, deps);
-
-      // Validate graph
       validate(cg);
 
-      // Parse input
       let inputs: Record<string, unknown>;
       if (options.input) {
         try {
@@ -68,7 +50,6 @@ export const runCommand = new Command('run')
         inputs = {};
       }
 
-      // Configure runner
       const opts = defaultOptions();
       opts.verbose = verbose;
       if (verbose) {
@@ -97,12 +78,8 @@ export const runCommand = new Command('run')
         };
       }
 
-      // Run
       const runner = new Runner(cg, opts);
       const result = await runner.run(undefined, inputs);
-
-      // Output result
-      const output = JSON.stringify(result.toData(), null, 2);
-      console.log(output);
+      console.log(JSON.stringify(result.toData(), null, 2));
     },
   );

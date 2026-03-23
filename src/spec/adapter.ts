@@ -74,31 +74,25 @@ export function toSpecFlow(sdkComponent: ComponentBase): ParsedFlow {
     );
   }
 
-  const parsedNodes: SpecNode[] = [];
-  for (const node of flow.nodes) {
-    parsedNodes.push(toSpecNode(node));
-  }
+  const parsedNodes = flow.nodes.map(toSpecNode);
 
-  const controlFlowConnections: ControlFlowEdge[] = [];
-  for (const edge of flow.controlFlowConnections) {
-    controlFlowConnections.push({
+  const controlFlowConnections = flow.controlFlowConnections.map(
+    (edge): ControlFlowEdge => ({
       fromNode: edge.fromNode.name,
       fromBranch: edge.fromBranch ?? undefined,
       toNode: edge.toNode.name,
-    });
-  }
+    }),
+  );
 
-  const dataFlowConnections: DataFlowEdge[] = [];
-  if (flow.dataFlowConnections) {
-    for (const edge of flow.dataFlowConnections) {
-      dataFlowConnections.push({
+  const dataFlowConnections =
+    flow.dataFlowConnections?.map(
+      (edge): DataFlowEdge => ({
         sourceNode: edge.sourceNode.name,
         sourceOutput: edge.sourceOutput,
         destinationNode: edge.destinationNode.name,
         destinationInput: edge.destinationInput,
-      });
-    }
-  }
+      }),
+    ) ?? [];
 
   return {
     name: flow.name,

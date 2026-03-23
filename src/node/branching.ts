@@ -1,4 +1,4 @@
-import type { StartNode, EndNode, BranchingNode } from '../spec/types.js';
+import type { BranchingNode } from '../spec/types.js';
 import { State } from '../state/state.js';
 import type { NodeExecutor, Dependencies } from './types.js';
 
@@ -21,11 +21,9 @@ export class BranchingExecutor implements NodeExecutor {
     _signal: AbortSignal | undefined,
     input: State,
   ): Promise<State> {
-    // Read the branching key from input
     let [keyValue, ok] = input.getString('branching_mapping_key');
 
     if (!ok) {
-      // Try to find any input value
       for (const key of input.keys()) {
         const [v, found] = input.getString(key);
         if (found) {
@@ -40,7 +38,6 @@ export class BranchingExecutor implements NodeExecutor {
       }
     }
 
-    // Look up in mapping
     if (keyValue in this.node.mapping) {
       this._branch = this.node.mapping[keyValue];
     } else if (DEFAULT_BRANCH in this.node.mapping) {
@@ -53,26 +50,8 @@ export class BranchingExecutor implements NodeExecutor {
   }
 }
 
-/** StartExecutor passes inputs through to outputs. */
-export class StartExecutor implements NodeExecutor {
-  constructor(private node: StartNode) {}
-
-  branch(): string {
-    return '';
-  }
-
-  async execute(
-    _signal: AbortSignal | undefined,
-    input: State,
-  ): Promise<State> {
-    return input.clone();
-  }
-}
-
-/** EndExecutor collects final outputs. */
-export class EndExecutor implements NodeExecutor {
-  constructor(private node: EndNode) {}
-
+/** PassthroughExecutor passes inputs through unchanged (used for Start and End nodes). */
+export class PassthroughExecutor implements NodeExecutor {
   branch(): string {
     return '';
   }

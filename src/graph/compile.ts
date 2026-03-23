@@ -1,7 +1,6 @@
 import type { ParsedFlow, SpecNode } from '../spec/types.js';
-import type { Dependencies } from '../node/types.js';
-import type { NodeExecutor } from '../node/types.js';
-import { StartExecutor, EndExecutor, BranchingExecutor } from '../node/branching.js';
+import type { Dependencies, NodeExecutor } from '../node/types.js';
+import { PassthroughExecutor, BranchingExecutor } from '../node/branching.js';
 import { AgentExecutor } from '../node/agent.js';
 import { LLMExecutor } from '../node/llm.js';
 import { ToolNodeExecutor } from '../node/tool.js';
@@ -71,9 +70,8 @@ export function compile(
 function buildExecutor(n: SpecNode, deps: Dependencies): NodeExecutor {
   switch (n.componentType) {
     case 'StartNode':
-      return new StartExecutor(n);
     case 'EndNode':
-      return new EndExecutor(n);
+      return new PassthroughExecutor();
     case 'AgentNode':
       return new AgentExecutor(n, deps);
     case 'LlmNode':
