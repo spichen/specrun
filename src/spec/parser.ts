@@ -54,3 +54,14 @@ export function parseComponent(data: string | Buffer): ParsedFlow | Agent {
       );
   }
 }
+
+/** ParseComponentYaml deserializes a YAML string via the SDK. */
+export function parseComponentYaml(data: string): ComponentBase {
+  return deserializer.fromYaml(data) as ComponentBase;
+}
+
+/** ParseComponentJson deserializes a JSON string via the SDK. */
+export function parseComponentJson(data: string | Buffer): ComponentBase {
+  const str = typeof data === 'string' ? data : data.toString();
+  return deserializer.fromJson(str) as ComponentBase;
+}

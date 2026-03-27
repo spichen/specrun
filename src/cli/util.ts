@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { parseFlow, parseFlowYaml } from '../spec/parser.js';
+import type { ComponentBase } from 'agentspec';
+import { parseFlow, parseFlowYaml, parseComponentYaml, parseComponentJson } from '../spec/parser.js';
 import { validateFlow } from '../spec/validate.js';
 import type { ParsedFlow } from '../spec/types.js';
 
@@ -13,4 +14,12 @@ export function loadFlow(flowPath: string): ParsedFlow {
 
   validateFlow(pf);
   return pf;
+}
+
+/** Load any agent-spec component (Flow, Agent, Swarm, etc.) via SDK deserialization. */
+export function loadComponent(filePath: string): ComponentBase {
+  const data = readFileSync(filePath, 'utf-8');
+  return filePath.endsWith('.yaml') || filePath.endsWith('.yml')
+    ? parseComponentYaml(data)
+    : parseComponentJson(data);
 }
