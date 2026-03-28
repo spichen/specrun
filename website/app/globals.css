@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #07070a;
+  --color-card: #111118;
+  --color-card-border: #1e1e2a;
+  --color-text-muted: #9ca3af;
+  --color-accent-blue: #3b82f6;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-teal: #06b6d4;
+  --color-accent-pink: #ec4899;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+/* Dot grid pattern */
+.dot-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* Glassmorphism */
+.glass {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: linear-gradient(
+    135deg,
+    rgba(6, 182, 212, 0.06),
+    rgba(139, 92, 246, 0.06)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Scrollbar styling */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Terminal syntax colors */
+.terminal-prompt {
+  color: #06b6d4;
+}
+.terminal-command {
+  color: #e2e8f0;
+}
+.terminal-flag {
+  color: #8b5cf6;
+}
+.terminal-string {
+  color: #34d399;
+}
+.terminal-success {
+  color: #22c55e;
+}
+.terminal-arrow {
+  color: #3b82f6;
+}
+.terminal-output {
+  color: #9ca3af;
+}
+
+/* Code block syntax */
+.syntax-key {
+  color: #06b6d4;
+}
+.syntax-string {
+  color: #34d399;
+}
+.syntax-comment {
+  color: #6b7280;
+}
+.syntax-keyword {
+  color: #8b5cf6;
+}
+.syntax-variable {
+  color: #f59e0b;
+}
