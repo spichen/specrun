@@ -5,19 +5,59 @@ import { FileRegistry } from '../tool/registry.js';
 import { SubprocessExecutor } from '../tool/executor.js';
 import { Runner } from '../runner/runner.js';
 import { DEFAULT_RUNNER_OPTIONS } from '../runner/options.js';
+import type { RunnerOptions } from '../runner/options.js';
 import type { Event } from '../runner/events.js';
-import { collectToolNames } from '../spec/types.js';
+import { collectToolNames, propertyTitle } from '../spec/types.js';
 import { loadFlow } from './util.js';
+import type { ParsedFlow } from '../spec/types.js';
+
+function buildRunnerOpts(verbose: boolean): RunnerOptions {
+  const opts = { ...DEFAULT_RUNNER_OPTIONS, verbose };
+  if (verbose) {
+    opts.eventHandler = (e: Event) => {
+      switch (e.type) {
+        case 'node_start':
+          console.error(`[${e.nodeName}] Starting ${e.nodeType}`);
+          break;
+        case 'node_complete':
+          console.error(`[${e.nodeName}] Completed`);
+          break;
+        case 'node_error':
+          console.error(`[${e.nodeName}] Error: ${e.error}`);
+          break;
+        case 'flow_start':
+          console.error('Flow started');
+          break;
+        case 'flow_complete':
+          console.error('Flow completed');
+          break;
+      }
+    };
+  }
+  return opts;
+}
+
+/** Determine the primary input key from the flow's StartNode outputs. */
+function detectInputKey(pf: ParsedFlow): string {
+  for (const n of pf.parsedNodes) {
+    if (n.componentType === 'StartNode' && n.outputs && n.outputs.length > 0) {
+      const title = propertyTitle(n.outputs[0]);
+      if (title) return title;
+    }
+  }
+  return 'query';
+}
 
 export const runCommand = new Command('run')
   .description('Run an Agent Spec flow')
   .argument('<flow>', 'Path to flow JSON or YAML file')
   .option('--tools-dir <dir>', 'Directory containing tool executables')
   .option('--input <json>', 'Input JSON object')
+  .option('--chat', 'Open an interactive chat session')
   .action(
     async (
       flowPath: string,
-      options: { toolsDir?: string; input?: string },
+      options: { toolsDir?: string; input?: string; chat?: boolean },
       command: Command,
     ) => {
       const verbose = command.parent?.opts().verbose ?? false;
@@ -39,6 +79,19 @@ export const runCommand = new Command('run')
       const cg = compile(pf, deps);
       validate(cg);
 
+      const opts = buildRunnerOpts(verbose);
+
+      if (options.chat) {
+        const { createSession } = await import('../chat/session.js');
+        const { startChat } = await import('../chat/ui.js');
+        const session = createSession(flowPath);
+        const inputKey = detectInputKey(pf);
+
+        console.error(`Conversation saved to: ~/.specrun/conversations/${session.id}.json`);
+        startChat({ graph: cg, opts, session, inputKey });
+        return;
+      }
+
       let inputs: Record<string, unknown>;
       if (options.input) {
         try {
@@ -48,33 +101,6 @@ export const runCommand = new Command('run')
         }
       } else {
         inputs = {};
-      }
-
-      const opts = { ...DEFAULT_RUNNER_OPTIONS, verbose };
-      if (verbose) {
-        opts.eventHandler = (e: Event) => {
-          switch (e.type) {
-            case 'node_start':
-              console.error(
-                `[${e.nodeName}] Starting ${e.nodeType}`,
-              );
-              break;
-            case 'node_complete':
-              console.error(`[${e.nodeName}] Completed`);
-              break;
-            case 'node_error':
-              console.error(
-                `[${e.nodeName}] Error: ${e.error}`,
-              );
-              break;
-            case 'flow_start':
-              console.error('Flow started');
-              break;
-            case 'flow_complete':
-              console.error('Flow completed');
-              break;
-          }
-        };
       }
 
       const runner = new Runner(cg, opts);
