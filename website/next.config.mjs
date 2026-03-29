@@ -5,6 +5,7 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",
+  transpilePackages: ["three"],
 };
 
 export default withMDX(nextConfig);

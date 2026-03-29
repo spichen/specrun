@@ -1,63 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Zap, Copy, Check, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import type HlsType from "hls.js";
 
-// ---------- HLS Video Background ----------
-const HLS_URL =
-  "https://customer-cbeadsgr09pnsezs.cloudflarestream.com/697945ca6b876878dba3b23fbd2f1561/manifest/video.m3u8";
-const MP4_FALLBACK =
-  "https://customer-cbeadsgr09pnsezs.cloudflarestream.com/697945ca6b876878dba3b23fbd2f1561/downloads/default.mp4";
-
-function HeroVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    let hls: HlsType | null = null;
-
-    import("hls.js").then(({ default: Hls }) => {
-      if (!videoRef.current) return;
-
-      if (Hls.isSupported()) {
-        hls = new Hls({ enableWorker: true });
-        hls.loadSource(HLS_URL);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.ERROR, (_event, data) => {
-          if (data.fatal) {
-            video.src = MP4_FALLBACK;
-            video.load();
-          }
-        });
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = HLS_URL;
-      } else {
-        video.src = MP4_FALLBACK;
-      }
-    });
-
-    return () => {
-      hls?.destroy();
-    };
-  }, []);
-
-  return (
-    <video
-      ref={videoRef}
-      autoPlay
-      loop
-      muted
-      playsInline
-      preload="metadata"
-      className="h-full w-full object-cover [transform:scaleY(-1)]"
-    />
-  );
-}
+const FluidGradient = dynamic(() => import("./FluidGradient"), { ssr: false });
 
 // ---------- Hero ----------
 export default function Hero() {
@@ -76,9 +25,9 @@ export default function Hero() {
 
   return (
     <section className="relative -mt-14 min-h-screen overflow-hidden bg-[#010101]">
-      {/* Video Background */}
+      {/* Gradient Wave Background */}
       <div className="absolute inset-0 z-0">
-        <HeroVideo />
+        <FluidGradient />
         {/* Gradient fade to bg */}
         <div className="absolute inset-0 bg-gradient-to-b from-[rgba(1,1,1,0)] from-[26%] to-[#010101] to-[67%]" />
       </div>
