@@ -15,6 +15,24 @@ const OPENAI_COMPATIBLE_TYPES = new Set([
 ]);
 
 /**
+ * If the value starts with `$`, treat it as an environment variable reference
+ * and resolve it. Otherwise return the value as-is.
+ */
+function resolveEnvVar(value: string): string {
+  if (value.startsWith('$')) {
+    const key = value.slice(1);
+    const envValue = process.env[key];
+    if (!envValue) {
+      throw new LLMError(
+        `environment variable "${key}" is not set (referenced as "${value}" in spec)`,
+      );
+    }
+    return envValue;
+  }
+  return value;
+}
+
+/**
  * Creates an LLM Provider from a spec LLMConfig.
  *
  * All currently supported configs (OpenAI, vLLM, Ollama, OpenAI-compatible)
@@ -33,7 +51,7 @@ export function createProvider(config: LLMConfig): Provider {
   const opts: { apiKey?: string; baseURL?: string } = {};
 
   if (config.apiKey) {
-    opts.apiKey = config.apiKey;
+    opts.apiKey = resolveEnvVar(config.apiKey);
   }
 
   if (config.url) {
