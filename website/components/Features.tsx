@@ -10,7 +10,7 @@ export default function Features() {
       <div className="mx-auto max-w-7xl px-6">
         <SectionReveal>
           <h2 className="mb-16 text-center text-4xl font-bold tracking-tight sm:text-5xl">
-            Everything you need
+            Built for simplicity
           </h2>
         </SectionReveal>
 

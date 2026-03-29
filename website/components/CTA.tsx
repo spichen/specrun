@@ -11,7 +11,7 @@ export default function CTA() {
       <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
         <SectionReveal>
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            From zero to agent in 30 seconds
+            Get started in seconds
           </h2>
         </SectionReveal>
 

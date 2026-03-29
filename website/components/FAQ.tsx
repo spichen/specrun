@@ -9,8 +9,8 @@ export default function FAQ() {
     <section className="relative py-32">
       <div className="mx-auto max-w-3xl px-6">
         <SectionReveal>
-          <h2 className="mb-12 text-4xl font-bold tracking-tight sm:text-5xl">
-            Questions?
+          <h2 className="mb-12 text-center text-4xl font-bold tracking-tight sm:text-5xl">
+            Frequently asked questions
           </h2>
         </SectionReveal>
 
