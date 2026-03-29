@@ -1,0 +1,254 @@
+component_type: Flow
+agentspec_version: 26.2.0
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+name: coding-agent-flow
+description: A coding agent inspired by LangGraph's DeepAgent architecture with file operations, search, shell execution, planning, and sub-agent delegation.
+metadata: {}
+inputs: []
+outputs: []
+start_node:
+  $component_ref: start-node-0001
+nodes:
+  - $component_ref: start-node-0001
+  - $component_ref: coder-node-0001
+  - $component_ref: end-node-0001
+control_flow_connections:
+  - component_type: ControlFlowEdge
+    id: edge-start-coder
+    name: start_to_coder
+    metadata: {}
+    from_node:
+      $component_ref: start-node-0001
+    from_branch: null
+    to_node:
+      $component_ref: coder-node-0001
+  - component_type: ControlFlowEdge
+    id: edge-coder-end
+    name: coder_to_end
+    metadata: {}
+    from_node:
+      $component_ref: coder-node-0001
+    from_branch: null
+    to_node:
+      $component_ref: end-node-0001
+data_flow_connections:
+  - component_type: DataFlowEdge
+    id: data-start-coder
+    name: start_task_to_coder
+    metadata: {}
+    source_node:
+      $component_ref: start-node-0001
+    source_output: task
+    destination_node:
+      $component_ref: coder-node-0001
+    destination_input: task
+  - component_type: DataFlowEdge
+    id: data-coder-end
+    name: coder_result_to_end
+    metadata: {}
+    source_node:
+      $component_ref: coder-node-0001
+    source_output: result
+    destination_node:
+      $component_ref: end-node-0001
+    destination_input: result
+$referenced_components:
+  start-node-0001:
+    component_type: StartNode
+    id: start-node-0001
+    name: start
+    metadata: {}
+    inputs: []
+    outputs:
+      - title: task
+        type: string
+    branches:
+      - next
+  coder-node-0001:
+    component_type: AgentNode
+    id: coder-node-0001
+    name: coder
+    metadata: {}
+    inputs:
+      - title: task
+        type: string
+    outputs:
+      - title: result
+        type: string
+    branches:
+      - next
+    agent:
+      component_type: Agent
+      id: coder-agent-0001
+      name: coding-agent
+      description: A coding agent with file operations, search, shell execution, planning, and sub-agent delegation
+      metadata: {}
+      inputs:
+        - title: task
+          type: string
+      outputs:
+        - title: result
+          type: string
+      llm_config:
+        component_type: OpenAiConfig
+        id: openai-config-0001
+        name: openai-gpt4o
+        metadata: {}
+        model_id: gpt-4o
+        api_key: $OPENAI_API_KEY
+        api_type: chat_completions
+      system_prompt: |
+        You are a coding agent that helps users with software engineering tasks by reading, understanding, modifying, and creating code.
+
+        ## How you work
+
+        1. **Understand first.** Before making changes, explore the codebase. Use list_directory and search_files to discover structure, then read_file to examine specific files.
+
+        2. **Plan before acting.** For non-trivial tasks, use write_plan to create a step-by-step plan with checkboxes. Update it as you progress.
+
+        3. **Make targeted changes.** Use edit_file for modifications (exact old_string match). Use write_file only for new files.
+
+        4. **Verify your work.** After changes, use execute_command to run tests or linters.
+
+        5. **Delegate when appropriate.** Use delegate_task to hand off specialized work:
+           - "code_reviewer" — for reviewing code quality, bugs, and improvements
+           - "test_writer" — for generating test cases for code
+
+        ## Tool guidelines
+
+        - read_file: Always read before editing so you have exact content for old_string.
+        - edit_file: old_string must match exactly including whitespace. Keep changes minimal.
+        - write_file: Only for new files. For existing files, use edit_file.
+        - search_files: Use pattern for file discovery ("**/*.ts"), content_pattern for code search.
+        - execute_command: For tests, builds, git, etc. Check exit_code in response. 25s timeout.
+        - list_directory: Start here when exploring unfamiliar code.
+        - write_plan: Markdown with checkboxes (- [ ] / - [x]).
+        - delegate_task: Pass agent_name and a clear task description with relevant context.
+
+        ## Rules
+
+        - Do not make changes you were not asked to make.
+        - Preserve existing code style and conventions.
+        - If unsure, explain your reasoning before proceeding.
+
+        The user's request is: {{task}}
+      tools:
+        - component_type: ServerTool
+          id: tool-read-file
+          name: read_file
+          description: Read the contents of a file at the given path. Returns the file content as a string.
+          metadata: {}
+          inputs:
+            - title: path
+              type: string
+          outputs:
+            - title: content
+              type: string
+        - component_type: ServerTool
+          id: tool-write-file
+          name: write_file
+          description: Write content to a file at the given path. Creates parent directories if needed. Overwrites existing content. Use this to create new files.
+          metadata: {}
+          inputs:
+            - title: path
+              type: string
+            - title: content
+              type: string
+          outputs:
+            - title: result
+              type: string
+        - component_type: ServerTool
+          id: tool-edit-file
+          name: edit_file
+          description: "Edit an existing file by replacing an exact string match with new content. Provide old_string to find (must match exactly including whitespace) and new_string to replace it with. If old_string is empty, content is appended to the file."
+          metadata: {}
+          inputs:
+            - title: path
+              type: string
+            - title: old_string
+              type: string
+            - title: new_string
+              type: string
+          outputs:
+            - title: result
+              type: string
+        - component_type: ServerTool
+          id: tool-list-directory
+          name: list_directory
+          description: List files and directories at the given path. Returns entries with type indicators (/ for directories).
+          metadata: {}
+          inputs:
+            - title: path
+              type: string
+          outputs:
+            - title: entries
+              type: string
+        - component_type: ServerTool
+          id: tool-search-files
+          name: search_files
+          description: "Search for files. Use pattern for glob matching (e.g. '**/*.py') and/or content_pattern for grep-style regex search within files. Searches from the given path directory."
+          metadata: {}
+          inputs:
+            - title: path
+              type: string
+            - title: pattern
+              type: string
+            - title: content_pattern
+              type: string
+          outputs:
+            - title: results
+              type: string
+        - component_type: ServerTool
+          id: tool-execute-command
+          name: execute_command
+          description: Execute a shell command and return its output. Use for running tests, builds, git commands, etc. Commands have a 25-second timeout.
+          metadata: {}
+          inputs:
+            - title: command
+              type: string
+            - title: working_directory
+              type: string
+          outputs:
+            - title: stdout
+              type: string
+            - title: stderr
+              type: string
+            - title: exit_code
+              type: integer
+        - component_type: ServerTool
+          id: tool-write-plan
+          name: write_plan
+          description: "Write or update a task plan. Creates a .plan.md file in the working directory. Use markdown checkboxes: - [ ] todo, - [x] done."
+          metadata: {}
+          inputs:
+            - title: plan
+              type: string
+            - title: working_directory
+              type: string
+          outputs:
+            - title: result
+              type: string
+        - component_type: ServerTool
+          id: tool-delegate-task
+          name: delegate_task
+          description: "Delegate a task to a specialized sub-agent. Available agents: code_reviewer (reviews code for bugs, security, style), test_writer (generates test cases). The sub-agent runs as an independent specrun flow."
+          metadata: {}
+          inputs:
+            - title: agent_name
+              type: string
+            - title: task
+              type: string
+          outputs:
+            - title: result
+              type: string
+  end-node-0001:
+    component_type: EndNode
+    id: end-node-0001
+    name: end
+    metadata: {}
+    inputs:
+      - title: result
+        type: string
+    outputs: []
+    branches: []
+    branch_name: next
