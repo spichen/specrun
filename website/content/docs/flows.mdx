@@ -1,0 +1,99 @@
+---
+title: Flows
+description: Learn how to define multi-step agent workflows using nodes and edges.
+---
+
+A flow is a directed graph of nodes connected by edges. It defines the execution order and data passing between steps in your workflow.
+
+## Flow Structure
+
+Flows are defined in JSON or YAML following the Open Agent Specification:
+
+```yaml
+type: Flow
+name: my-flow
+nodes:
+  - name: start
+    type: StartNode
+    inputs:
+      - query: string
+  - name: agent
+    type: AgentNode
+    agent:
+      systemPrompt: "You are a helpful assistant."
+      tools:
+        - web_search
+    llm:
+      type: OpenAiConfig
+      model: gpt-4o
+  - name: end
+    type: EndNode
+controlFlowEdges:
+  - from: start
+    to: agent
+  - from: agent
+    to: end
+dataFlowEdges:
+  - from: start
+    to: agent
+    mapping:
+      query: input
+```
+
+## Nodes
+
+Nodes are the building blocks of a flow. Each node has a `name` and `type`:
+
+- **StartNode** — Entry point, defines expected inputs
+- **EndNode** — Exit point
+- **AgentNode** — LLM-powered agent with tools
+- **LlmNode** — Runs a prompt template through an LLM
+- **ToolNode** — Executes an external tool directly
+- **BranchingNode** — Routes execution based on conditions
+
+See [Nodes](/docs/nodes) for detailed documentation on each type.
+
+## Edges
+
+### Control Flow Edges
+
+Define execution order between nodes:
+
+```yaml
+controlFlowEdges:
+  - from: start
+    to: agent
+  - from: agent
+    to: end
+```
+
+### Data Flow Edges
+
+Pass data between nodes with field mapping:
+
+```yaml
+dataFlowEdges:
+  - from: start
+    to: agent
+    mapping:
+      query: input
+```
+
+## Execution
+
+When you run a flow, Specrun:
+
+1. Parses the JSON/YAML file
+2. Validates against the Open Agent Specification schema
+3. Compiles the graph and validates edges
+4. Executes nodes in topological order
+5. Passes data between nodes via data flow edges
+
+### Runner Defaults
+
+| Setting | Default |
+|---------|---------|
+| Max iterations | 50 |
+| Timeout | 5 minutes |
+| Max tool rounds per agent | 10 |
+| Tool execution timeout | 30 seconds |

@@ -1,0 +1,77 @@
+---
+title: CLI Reference
+description: Complete reference for all Specrun CLI commands and options.
+---
+
+## specrun run
+
+Execute an Agent Spec flow.
+
+```bash
+specrun run <flow> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `flow` | Path to the flow file (JSON or YAML) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--tools-dir <path>` | Directory containing tool executables |
+| `--input <json>` | Input data as a JSON string |
+| `--chat` | Start an interactive chat session |
+| `--verbose` | Enable verbose logging |
+
+### Examples
+
+```bash
+# Basic run
+specrun run flow.yaml --tools-dir ./tools
+
+# With input data
+specrun run flow.json --tools-dir ./tools --input '{"query": "quantum computing"}'
+
+# Interactive chat mode
+specrun run flow.yaml --tools-dir ./tools --chat
+```
+
+## specrun validate
+
+Validate an Agent Spec component.
+
+```bash
+specrun validate <spec> [options]
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `spec` | Path to the spec file (JSON or YAML) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--tools-dir <path>` | Directory containing tool executables (validates tool references) |
+
+### What It Checks
+
+1. Schema validation against the Open Agent Specification
+2. Graph compilation (for flows)
+3. Edge validation (control flow and data flow)
+4. Tool existence (when `--tools-dir` is provided)
+
+## specrun init
+
+Scaffold a new project.
+
+```bash
+specrun init <project-name>
+```
+
+Creates a project directory with a template `flow.json` and a sample tool in `tools/`.

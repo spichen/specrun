@@ -1,0 +1,70 @@
+---
+title: Getting Started
+description: Install Specrun and run your first agent workflow in under a minute.
+---
+
+## Installation
+
+Install the CLI globally via npm:
+
+```bash
+npm install -g @specrun/cli
+```
+
+Or via Homebrew:
+
+```bash
+brew install spichen/tap/specrun
+```
+
+Verify the installation:
+
+```bash
+specrun --version
+```
+
+## Create Your First Agent
+
+Scaffold a new project:
+
+```bash
+specrun init my-agent
+```
+
+This creates:
+
+```
+my-agent/
+├── flow.json      # Your workflow definition
+└── tools/
+    └── example_tool.sh   # A sample tool
+```
+
+## Run the Workflow
+
+```bash
+cd my-agent
+specrun run flow.json --tools-dir tools
+```
+
+You should see output showing the flow executing through each node.
+
+## Interactive Chat Mode
+
+For debugging and exploration, use chat mode:
+
+```bash
+specrun run flow.json --tools-dir tools --chat
+```
+
+This starts a persistent multi-turn conversation with your agent.
+
+## Validate a Spec
+
+Check your workflow for errors before running:
+
+```bash
+specrun validate flow.json --tools-dir tools
+```
+
+This validates the spec schema, compiles the graph, and checks that all referenced tools exist.

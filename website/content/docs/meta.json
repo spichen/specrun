@@ -1,0 +1,15 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "---Introduction---",
+    "index",
+    "getting-started",
+    "---Core Concepts---",
+    "flows",
+    "nodes",
+    "tools",
+    "---Configuration---",
+    "llm-providers",
+    "cli-reference"
+  ]
+}

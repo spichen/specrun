@@ -1,0 +1,97 @@
+---
+title: Tools
+description: Build custom tools in any language using stdin/stdout JSON.
+---
+
+Tools in Specrun are standalone executables that communicate via JSON over stdin/stdout. Write them in any language — no SDK required.
+
+## How Tools Work
+
+1. Specrun calls your tool as a subprocess
+2. Input is sent as JSON via stdin
+3. Your tool processes the input
+4. Output is returned as JSON via stdout
+
+## Creating a Tool
+
+### Bash
+
+```bash
+#!/usr/bin/env bash
+INPUT=$(cat)
+QUERY=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('query',''))")
+echo "{\"result\": \"You searched for: $QUERY\"}"
+```
+
+### Python
+
+```python
+#!/usr/bin/env python3
+import sys
+import json
+
+args = json.load(sys.stdin)
+query = args.get("query", "")
+
+results = {"result": f"You searched for: {query}"}
+json.dump(results, sys.stdout)
+```
+
+### Node.js
+
+```javascript
+#!/usr/bin/env node
+const chunks = [];
+process.stdin.on("data", (chunk) => chunks.push(chunk));
+process.stdin.on("end", () => {
+  const args = JSON.parse(Buffer.concat(chunks).toString());
+  const result = { result: `You searched for: ${args.query}` };
+  process.stdout.write(JSON.stringify(result));
+});
+```
+
+## Tool Directory
+
+Place your tools in a directory and reference it with `--tools-dir`:
+
+```
+tools/
+├── web_search        # Must be executable
+├── calculator
+└── fetch_api.py
+```
+
+Make sure tools are executable:
+
+```bash
+chmod +x tools/*
+```
+
+## Defining Tools in a Spec
+
+Tools are referenced by name in your agent's `tools` list:
+
+```yaml
+- name: agent
+  type: AgentNode
+  agent:
+    tools:
+      - web_search
+      - calculator
+    toolDefinitions:
+      - name: web_search
+        description: Search the web for information
+        inputs:
+          - query: string
+      - name: calculator
+        description: Perform mathematical calculations
+        inputs:
+          - expression: string
+```
+
+## Execution Details
+
+- Tool timeout: 30 seconds (default)
+- Tools must exit with code 0 on success
+- stderr output is captured for debugging
+- JSON must be valid — malformed output will cause an error

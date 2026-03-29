@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Geist, Instrument_Serif } from "next/font/google";
+import { RootProvider } from "fumadocs-ui/provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -45,7 +46,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${geist.variable} ${instrumentSerif.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <RootProvider>{children}</RootProvider>
+      </body>
     </html>
   );
 }

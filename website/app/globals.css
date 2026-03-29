@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@source '../node_modules/fumadocs-ui/dist/**/*.js';
 
 @theme {
   --color-bg: #07070a;
@@ -23,9 +27,23 @@ html {
 }
 
 body {
-  background-color: var(--color-bg);
-  color: #ffffff;
   overflow-x: hidden;
+}
+
+/* Landing page: transparent navbar */
+body:has(.landing-page) {
+  background: transparent !important;
+}
+
+.dark body:has(.landing-page),
+html.dark body:has(.landing-page) {
+  background: transparent !important;
+}
+
+body:has(.landing-page) #nd-nav {
+  background: transparent !important;
+  border-bottom: none !important;
+  backdrop-filter: none !important;
 }
 
 /* Glassmorphism */

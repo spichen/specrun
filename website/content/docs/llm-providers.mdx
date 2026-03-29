@@ -1,0 +1,81 @@
+---
+title: LLM Providers
+description: Configure OpenAI, vLLM, Ollama, or any compatible endpoint.
+---
+
+Specrun supports multiple LLM providers out of the box. Switch providers by changing a few lines in your spec — no code changes needed.
+
+## OpenAI
+
+```yaml
+llm:
+  type: OpenAiConfig
+  model: gpt-4o
+```
+
+Set your API key via environment variable:
+
+```bash
+export OPENAI_API_KEY=sk-...
+```
+
+Or reference it in the spec:
+
+```yaml
+llm:
+  type: OpenAiConfig
+  model: gpt-4o
+  api_key: $OPENAI_API_KEY
+```
+
+## OpenAI-Compatible
+
+For any endpoint that implements the OpenAI API format:
+
+```yaml
+llm:
+  type: OpenAiCompatibleConfig
+  model: my-model
+  base_url: https://my-endpoint.com/v1
+  api_key: $MY_API_KEY
+```
+
+## vLLM
+
+For self-hosted models via vLLM:
+
+```yaml
+llm:
+  type: VllmConfig
+  model: meta-llama/Llama-3.1-8B
+  base_url: http://localhost:8000
+```
+
+## Ollama
+
+For local models via Ollama:
+
+```yaml
+llm:
+  type: OllamaConfig
+  model: llama3.1
+```
+
+Ollama defaults to `http://localhost:11434`. To use a different host:
+
+```yaml
+llm:
+  type: OllamaConfig
+  model: llama3.1
+  base_url: http://my-server:11434
+```
+
+## Environment Variables
+
+API keys can reference environment variables using the `$` prefix:
+
+```yaml
+api_key: $MY_API_KEY
+```
+
+Specrun resolves these at runtime from your shell environment.

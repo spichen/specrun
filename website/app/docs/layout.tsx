@@ -1,11 +1,12 @@
-import { HomeLayout } from "fumadocs-ui/layouts/home";
-import Hero from "@/components/Hero";
+import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import type { ReactNode } from "react";
+import { source } from "@/lib/source";
 import { GITHUB_URL } from "@/lib/constants";
 
-export default function Home() {
+export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <HomeLayout
-      className="landing-page"
+    <DocsLayout
+      tree={source.pageTree}
       nav={{
         title: (
           <span className="font-semibold tracking-tight">specrun</span>
@@ -17,7 +18,7 @@ export default function Home() {
       ]}
       githubUrl={GITHUB_URL}
     >
-      <Hero />
-    </HomeLayout>
+      {children}
+    </DocsLayout>
   );
 }
