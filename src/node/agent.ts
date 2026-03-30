@@ -50,9 +50,23 @@ export class AgentExecutor implements NodeExecutor {
       parameters: buildToolSchema(t),
     })) ?? [];
 
+    // Extract chat history if present (injected by chat mode)
+    const historyRaw = input.get('_chat_history');
+    const chatHistory = Array.isArray(historyRaw)
+      ? (historyRaw as Array<{ role: string; content: string }>)
+      : [];
+
+    // Build input data without the chat history for the user message
+    const inputData = input.toData();
+    delete inputData._chat_history;
+
     const messages: Message[] = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: JSON.stringify(input.toData()) },
+      ...chatHistory.map((m) => ({
+        role: m.role as Message['role'],
+        content: m.content,
+      })),
+      { role: 'user', content: JSON.stringify(inputData) },
     ];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {

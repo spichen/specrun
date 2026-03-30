@@ -43,11 +43,20 @@ function Chat({ graph, opts, session, inputKey }: ChatProps) {
 
       setInput('');
       setHistory((prev) => [...prev, { role: 'user', content: trimmed }]);
+
+      // Capture previous messages before adding the current one
+      const previousMessages = session.messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
       addMessage(session, 'user', trimmed);
       setRunning(true);
 
       try {
-        const inputs: Record<string, unknown> = { [inputKey]: trimmed };
+        const inputs: Record<string, unknown> = {
+          [inputKey]: trimmed,
+          _chat_history: previousMessages,
+        };
         const runner = new Runner(graph, opts);
         const result = await runner.run(undefined, inputs);
 
