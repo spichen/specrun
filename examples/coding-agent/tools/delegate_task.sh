@@ -3,8 +3,12 @@
 set -euo pipefail
 INPUT=$(cat)
 
-AGENT_NAME=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('agent_name',''))")
-TASK=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('task',''))")
+parse_json_field() {
+  echo "$INPUT" | python3 -c "import sys, json; sys.stdout.write(json.load(sys.stdin).get(sys.argv[1], ''))" "$1"
+}
+
+AGENT_NAME=$(parse_json_field 'agent_name')
+TASK=$(parse_json_field 'task')
 
 if [ -z "$AGENT_NAME" ]; then
   echo '{"result": "Error: no agent_name provided. Available agents: code_reviewer, test_writer"}'
@@ -30,7 +34,7 @@ fi
 INPUT_JSON=$(python3 -c "import json,sys; json.dump({'task': sys.argv[1]}, sys.stdout)" "$TASK")
 
 # Run the sub-agent flow via specrun
-OUTPUT=$(npx specrun run "$AGENT_SPEC" --input "$INPUT_JSON" 2>&1) || true
+OUTPUT=$(npx specrun run "$AGENT_SPEC" --input "$INPUT_JSON" 2>&1) || { echo "Error: sub-agent execution failed"; exit 1; }
 
 # Extract the result from the specrun output
 python3 -c "

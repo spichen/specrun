@@ -54,7 +54,7 @@ try:
     else:
         # Just return the file list
         files = [f for f in files if not os.path.isdir(f)]
-        result = "\n".join(files[:200]) if files else "No files found"
+        result = "\n".join(files)[:200] if files else "No files found"
 
     json.dump({"results": result}, sys.stdout)
 

@@ -10,5 +10,5 @@ if [ ! -d "$DIR_PATH" ]; then
   exit 0
 fi
 
-ENTRIES=$(ls -1F "$DIR_PATH" 2>&1 || true)
+ENTRIES=$(find "$DIR_PATH" -maxdepth 1 2>&1 || true)
 python3 -c "import json,sys; json.dump({'entries': sys.argv[1]}, sys.stdout)" "$ENTRIES"

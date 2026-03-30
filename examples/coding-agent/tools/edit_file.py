@@ -43,10 +43,12 @@ if old_string not in content:
 count = content.count(old_string)
 new_content = content.replace(old_string, new_string, 1)
 
-with open(path, "w") as f:
-    f.write(new_content)
-
-msg = f"Successfully edited {path}"
-if count > 1:
-    msg += f" (replaced first of {count} occurrences)"
-json.dump({"result": msg}, sys.stdout)
+try:
+    with open(path, "w") as f:
+        f.write(new_content)
+    msg = f"Successfully edited {path}"
+    if count > 1:
+        msg += f" (replaced first of {count} occurrences)"
+    json.dump({"result": msg}, sys.stdout)
+except Exception as e:
+    json.dump({"result": f"Error writing to file: {e}"}, sys.stdout)

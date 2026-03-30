@@ -22,5 +22,5 @@ except FileNotFoundError:
 except PermissionError:
     json.dump({'content': f'Error: permission denied: {path}'}, sys.stdout)
 except Exception as e:
-    json.dump({'content': f'Error: {e}'}, sys.stdout)
+    json.dump({'content': f'Error reading file: {e}'}, sys.stdout)
 " <<< "$INPUT"

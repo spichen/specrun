@@ -12,7 +12,7 @@ trap 'rm -f "$STDOUT_FILE" "$STDERR_FILE"' EXIT
 
 EXIT_CODE=0
 if command -v timeout &>/dev/null; then
-  cd "$WORKDIR" && timeout 25 bash -c "$COMMAND" >"$STDOUT_FILE" 2>"$STDERR_FILE" || EXIT_CODE=$?
+  cd "$WORKDIR" && timeout 25 sh -c "$COMMAND" >"$STDOUT_FILE" 2>"$STDERR_FILE" || EXIT_CODE=$?
 elif command -v gtimeout &>/dev/null; then
   cd "$WORKDIR" && gtimeout 25 bash -c "$COMMAND" >"$STDOUT_FILE" 2>"$STDERR_FILE" || EXIT_CODE=$?
 else
