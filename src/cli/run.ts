@@ -10,26 +10,37 @@ import type { Event } from '../runner/events.js';
 import { collectToolNames, propertyTitle } from '../spec/types.js';
 import { loadFlow } from './util.js';
 import type { ParsedFlow } from '../spec/types.js';
+import { getToolIcon, getToolTitle, formatDuration } from '../chat/tool-display.js';
 
-function buildRunnerOpts(verbose: boolean): RunnerOptions {
+function buildRunnerOpts(verbose: boolean, chat: boolean): RunnerOptions {
   const opts = { ...DEFAULT_RUNNER_OPTIONS, verbose };
-  if (verbose) {
+  if (!chat) {
     opts.eventHandler = (e: Event) => {
       switch (e.type) {
+        case 'tool_call':
+          console.error(`[${e.nodeName}] ${getToolIcon(e.toolName!)} ${getToolTitle(e.toolName!, e.toolArgs ?? {})}`);
+          break;
+        case 'tool_result':
+          if (e.error) {
+            console.error(`[${e.nodeName}] Error: ${e.toolName} (${formatDuration(e.duration ?? 0)}): ${e.error.message}`);
+          } else if (verbose) {
+            console.error(`[${e.nodeName}] Done: ${e.toolName} (${formatDuration(e.duration ?? 0)})`);
+          }
+          break;
         case 'node_start':
-          console.error(`[${e.nodeName}] Starting ${e.nodeType}`);
+          if (verbose) console.error(`[${e.nodeName}] Starting ${e.nodeType}`);
           break;
         case 'node_complete':
-          console.error(`[${e.nodeName}] Completed`);
+          if (verbose) console.error(`[${e.nodeName}] Completed`);
           break;
         case 'node_error':
           console.error(`[${e.nodeName}] Error: ${e.error}`);
           break;
         case 'flow_start':
-          console.error('Flow started');
+          if (verbose) console.error('Flow started');
           break;
         case 'flow_complete':
-          console.error('Flow completed');
+          if (verbose) console.error('Flow completed');
           break;
       }
     };
@@ -70,18 +81,20 @@ export const runCommand = new Command('run')
         reg.validateTools(toolNames);
       }
 
+      const isChat = options.chat ?? false;
+      const opts = buildRunnerOpts(verbose, isChat);
+
       const deps = {
         toolExecutor: new SubprocessExecutor(),
         toolRegistry: reg,
         verbose,
+        eventHandler: (e: Event) => opts.eventHandler?.(e),
       };
 
       const cg = compile(pf, deps);
       validate(cg);
 
-      const opts = buildRunnerOpts(verbose);
-
-      if (options.chat) {
+      if (isChat) {
         const { createSession } = await import('../chat/session.js');
         const { startChat } = await import('../chat/ui.js');
         const session = createSession(flowPath);

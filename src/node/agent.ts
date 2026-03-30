@@ -95,9 +95,36 @@ export class AgentExecutor implements NodeExecutor {
       });
 
       for (const tc of resp.tool_calls) {
+        let args: Record<string, unknown>;
+        try {
+          args = JSON.parse(tc.arguments);
+        } catch {
+          args = {};
+        }
+
+        const startedAt = Date.now();
+        this.deps.eventHandler?.({
+          type: 'tool_call',
+          nodeName: this.node.name,
+          toolName: tc.name,
+          toolArgs: args,
+          toolCallId: tc.id,
+          startedAt,
+        });
+
         try {
           const toolResult = await this.executeTool(signal, tc);
           const resultJSON = JSON.stringify(toolResult);
+
+          this.deps.eventHandler?.({
+            type: 'tool_result',
+            nodeName: this.node.name,
+            toolName: tc.name,
+            toolResult: toolResult,
+            toolCallId: tc.id,
+            duration: Date.now() - startedAt,
+          });
+
           if (this.deps.verbose) {
             console.error(`  Tool "${tc.name}" result: ${resultJSON}`);
           }
@@ -107,6 +134,17 @@ export class AgentExecutor implements NodeExecutor {
             content: resultJSON,
           });
         } catch (err) {
+          const toolErr = err instanceof Error ? err : new Error(String(err));
+
+          this.deps.eventHandler?.({
+            type: 'tool_result',
+            nodeName: this.node.name,
+            toolName: tc.name,
+            toolCallId: tc.id,
+            duration: Date.now() - startedAt,
+            error: toolErr,
+          });
+
           if (this.deps.verbose) {
             console.error(`  Tool "${tc.name}" error: ${err}`);
           }

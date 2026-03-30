@@ -12,4 +12,5 @@ export interface Dependencies {
   toolExecutor?: Executor;
   toolRegistry?: Registry;
   verbose?: boolean;
+  eventHandler?: (event: import('../runner/events.js').Event) => void;
 }

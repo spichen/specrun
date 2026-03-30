@@ -6,7 +6,9 @@ export type EventType =
   | 'node_complete'
   | 'node_error'
   | 'flow_start'
-  | 'flow_complete';
+  | 'flow_complete'
+  | 'tool_call'
+  | 'tool_result';
 
 /** Event holds information about a runner event. */
 export interface Event {
@@ -15,6 +17,12 @@ export interface Event {
   nodeType?: string;
   state?: State;
   error?: Error;
+  toolName?: string;
+  toolArgs?: Record<string, unknown>;
+  toolResult?: unknown;
+  toolCallId?: string;
+  startedAt?: number;
+  duration?: number;
 }
 
 /** EventHandler receives events during flow execution. */

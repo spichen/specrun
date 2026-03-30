@@ -1,15 +1,79 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { render, Box, Text, useInput, useApp } from 'ink';
 import TextInput from 'ink-text-input';
 import type { CompiledGraph } from '../graph/types.js';
 import type { RunnerOptions } from '../runner/options.js';
+import type { Event } from '../runner/events.js';
 import { Runner } from '../runner/runner.js';
 import type { ChatSession } from './session.js';
 import { addMessage } from './session.js';
+import { getToolIcon, getToolTitle, formatDuration } from './tool-display.js';
 
-interface ChatEntry {
+interface ToolCallEntry {
+  id: string;
+  toolName: string;
+  toolArgs: Record<string, unknown>;
+  status: 'running' | 'completed' | 'error';
+  startedAt: number;
+  duration?: number;
+  error?: string;
+}
+
+interface MessageEntry {
   role: 'user' | 'assistant';
   content: string;
+}
+
+type ChatEntry = MessageEntry | ToolCallEntry;
+
+function isToolCall(entry: ChatEntry): entry is ToolCallEntry {
+  return 'toolName' in entry;
+}
+
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+function Spinner() {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFrame((prev) => (prev + 1) % SPINNER_FRAMES.length);
+    }, 80);
+    return () => clearInterval(timer);
+  }, []);
+  return <Text color="cyan">{SPINNER_FRAMES[frame]}</Text>;
+}
+
+function ToolCallLine({ entry }: { entry: ToolCallEntry }) {
+  const icon = getToolIcon(entry.toolName);
+  const title = getToolTitle(entry.toolName, entry.toolArgs);
+
+  if (entry.status === 'running') {
+    return (
+      <Box>
+        <Text>{'   '}</Text>
+        <Spinner />
+        <Text>{' '}{title}</Text>
+      </Box>
+    );
+  }
+
+  if (entry.status === 'error') {
+    const elapsed = entry.duration != null ? ` \u00b7 ${formatDuration(entry.duration)}` : '';
+    return (
+      <Box>
+        <Text>{'   '}</Text>
+        <Text color="red">{icon} {title}{elapsed}</Text>
+        {entry.error && <Text color="red">{' '}{entry.error}</Text>}
+      </Box>
+    );
+  }
+
+  const elapsed = entry.duration != null ? ` \u00b7 ${formatDuration(entry.duration)}` : '';
+  return (
+    <Box>
+      <Text dimColor>{'   '}{icon} {title}{elapsed}</Text>
+    </Box>
+  );
 }
 
 interface ChatProps {
@@ -30,6 +94,8 @@ function Chat({ graph, opts, session, inputKey }: ChatProps) {
       exit();
     }
   });
+
+  const hasActiveToolCall = running && history.some((e) => isToolCall(e) && e.status === 'running');
 
   const handleSubmit = useCallback(
     async (value: string) => {
@@ -56,6 +122,36 @@ function Chat({ graph, opts, session, inputKey }: ChatProps) {
         const inputs: Record<string, unknown> = {
           [inputKey]: trimmed,
           _chat_history: previousMessages,
+        };
+        opts.eventHandler = (e: Event) => {
+          if (e.type === 'tool_call' && e.toolCallId) {
+            setHistory((prev) => [
+              ...prev,
+              {
+                id: e.toolCallId!,
+                toolName: e.toolName!,
+                toolArgs: e.toolArgs ?? {},
+                status: 'running' as const,
+                startedAt: e.startedAt ?? Date.now(),
+              },
+            ]);
+          }
+
+          if (e.type === 'tool_result' && e.toolCallId) {
+            setHistory((prev) =>
+              prev.map((entry) => {
+                if (isToolCall(entry) && entry.id === e.toolCallId) {
+                  return {
+                    ...entry,
+                    status: e.error ? ('error' as const) : ('completed' as const),
+                    duration: e.duration,
+                    error: e.error?.message,
+                  };
+                }
+                return entry;
+              }),
+            );
+          }
         };
         const runner = new Runner(graph, opts);
         const result = await runner.run(undefined, inputs);
@@ -101,7 +197,9 @@ function Chat({ graph, opts, session, inputKey }: ChatProps) {
 
       {history.map((entry, i) => (
         <Box key={i} marginBottom={0}>
-          {entry.role === 'user' ? (
+          {isToolCall(entry) ? (
+            <ToolCallLine entry={entry} />
+          ) : entry.role === 'user' ? (
             <Text>
               <Text bold color="green">
                 {'> '}
@@ -119,9 +217,11 @@ function Chat({ graph, opts, session, inputKey }: ChatProps) {
         </Box>
       ))}
 
-      {running && (
+      {running && !hasActiveToolCall && (
         <Box marginTop={0}>
-          <Text dimColor>Running flow...</Text>
+          <Text dimColor>
+            {'   '}<Spinner />{' '}Thinking...
+          </Text>
         </Box>
       )}
 
